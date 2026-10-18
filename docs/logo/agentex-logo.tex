@@ -1,0 +1,20 @@
+% AgenTeX wordmark. "TeX" is the real \TeX logo (Computer Modern, lowered E);
+% "Agen" is Montserrat SemiBold in Okabe-Ito sky blue (the TikZ style sheet's accent family).
+% Build: tectonic agentex-logo.tex          (or: xelatex / lualatex / pdflatex)
+% Variant: \cardtrue = white text on a dark rounded card (works on light and dark pages)
+%          \cardfalse = white text on a transparent background (for dark slides/sites)
+\documentclass[border=0pt]{standalone}
+\usepackage{tikz}
+\usepackage{montserrat}
+\newif\ifcard \cardtrue
+\definecolor{agen}{HTML}{56B4E9}
+\definecolor{card}{HTML}{0D1117}
+% Decide outside the picture: pgfkeys can't evaluate \if...\fi inside an option list.
+\ifcard\tikzset{bg/.style={fill=card}}\else\tikzset{bg/.style={}}\fi
+\begin{document}
+\begin{tikzpicture}
+  \node[inner xsep=34pt, inner ysep=20pt, rounded corners=16pt, bg]{%
+    \fontsize{60}{64}\selectfont
+    {\sffamily\fontseries{sb}\selectfont\color{agen}Agen}\kern-0.02em{\rmfamily\mdseries\color{white}\TeX}};
+\end{tikzpicture}
+\end{document}

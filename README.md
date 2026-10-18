@@ -1,6 +1,6 @@
 <div align="center">
 
-# AgenTeX
+<img src="docs/logo/agentex-logo.svg" alt="AgenTeX" width="440">
 
 **Keep your LaTeX paper honest to the code behind it.**
 
@@ -175,6 +175,7 @@ skills/
   latex-research-check/  latex-plagiarism-check/     latex-review/ (venue forms)
   latex-arxiv/           (arxiv_pack.py)
 docs/gallery/            rendered pattern previews
+docs/logo/               wordmark source (.tex) + PDF/SVG/PNG, card and transparent variants
 ```
 
 ## Contributing
