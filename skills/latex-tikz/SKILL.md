@@ -1,11 +1,32 @@
 ---
 name: latex-tikz
-description: "Draw publication-quality TikZ/PGFPlots figures: model architectures from code, pipelines, flowcharts, graphical models, trees, state machines, matrices, geometry, data plots and commutative diagrams. Ships tested patterns, a shared style sheet and offline search of 1,200 manual examples."
+description: "Suggest and draw publication-quality TikZ/PGFPlots figures from a project's code: architectures, pipelines, flowcharts, graphical models, state machines, matrices, plots. Use for any diagram request, or when the user wants ideas for which figures to make."
 ---
 
 # TikZ Diagrams
 
 Goal: figures that are correct to the code, compile first time, match the paper's typography, print in greyscale, and cost few tokens to produce and revise.
+
+## Suggest mode: read the code, offer diagram choices
+
+Use this when the user asks for diagram ideas, asks for "a figure" without saying which, or starts a paper from a code repo.
+
+1. **Scan, don't read everything:**
+   ```bash
+   python3 <skill>/scripts/diagram_ideas.py <repo>
+   ```
+   It parses the Python files and notebooks (no execution) and prints numbered ideas: **high-level** ones (end-to-end pipeline, artefact flow between scripts, module architecture, object composition, model overview) and **component** ones (a network's layers in run order, training loop, iterative solver, time-stepping scheme, graphical model, einsum shapes, state enum, class hierarchy, results plot). Each comes with its pattern and `file:line` evidence.
+2. **Check and complete the list.** Read only the cited lines for the top ideas, drop wrong ones, and add what static analysis can't see. Always consider:
+   - a *method overview / teaser* figure (the paper's Figure 1)
+   - a *problem setup* figure
+   - for non-Python code, or a sparse result, ideas from the README and entry points.
+3. **Let the user choose one or many.** If the host has a multiple-choice question tool (Claude Code: `AskUserQuestion` with `multiSelect: true`), ask two questions in one call, **"High-level diagrams"** and **"Component diagrams"**, each with the 2–4 best ideas:
+   - label: ≤ 5 words, e.g. "End-to-end pipeline"
+   - description: what it shows, its source and a tiny flow sketch, e.g. "`train.py`: load_data → ResNet → train → evaluate"
+   - name any extra ideas in your message so the user can request them via "Other".
+
+   Without such a tool, print a numbered list (`H1…`, `C1…`) and ask for numbers, e.g. "H1, C2, C3".
+4. **Build each chosen figure** with the workflow below, one file per figure (`paper/figures/<name>.tex`), running `tikzcheck.sh` on each. Finish with a table: figure → file → source code it depicts → preview checked.
 
 ## Workflow
 

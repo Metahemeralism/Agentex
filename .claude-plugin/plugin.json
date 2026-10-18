@@ -1,6 +1,6 @@
 {
   "name": "agentex",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "AgenTeX: 14 skills + 2 hooks that keep LaTeX papers honest to the code behind them: verified citations with a cite guard, results-to-macros sync with stale-number audits, a compile-and-fix loop, TikZ, equations, tables, prior-work search, overlap screening, mock peer review and arXiv packaging.",
   "author": {
     "name": "Metahemeralism"
@@ -18,5 +18,14 @@
     "research",
     "academic-writing",
     "skills"
-  ]
+  ],
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "animations": {
+      "type": "boolean",
+      "title": "Animations",
+      "description": "Show the AgenTeX band above the prompt: a one-time welcome after install and a small animation while AgenTeX checks run.",
+      "default": true
+    }
+  }
 }

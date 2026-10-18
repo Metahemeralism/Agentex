@@ -69,7 +69,7 @@ Tested TikZ patterns from [`latex-tikz`](skills/latex-tikz/SKILL.md), about 20 l
 | | [`latex-debug`](skills/latex-debug/SKILL.md) | Log digest (a 1,150-line log → 1 line), error lookup table, bisection workflow |
 | **Write** | [`latex-project`](skills/latex-project/SKILL.md) | Paper/thesis scaffold next to your code; `texmap.py` project map so agents read only what they need |
 | | [`latex-math`](skills/latex-math/SKILL.md) | Code → equations via a symbol map, with shape/index checks against the implementation and notation audits |
-| | [`latex-tikz`](skills/latex-tikz/SKILL.md) | 12 tested patterns, shared styles, offline search of **1,229 official TikZ manual examples**, render-and-look loop |
+| | [`latex-tikz`](skills/latex-tikz/SKILL.md) | Reads your code and **suggests figures to pick from**; 12 tested patterns, shared styles, offline search of **1,229 official TikZ manual examples**, render-and-look loop |
 | | [`latex-algorithms`](skills/latex-algorithms/SKILL.md) | Functions → `algorithmicx` pseudocode, or `minted`/`listings` pulled from source files |
 | | [`latex-tables-figures`](skills/latex-tables-figures/SKILL.md) | booktabs/siunitx tables, matplotlib/pgfplots figures sized to the column |
 | | [`latex-beamer`](skills/latex-beamer/SKILL.md) | Paper → timed talk with claim-style titles and reused figures and notation |
@@ -84,6 +84,12 @@ Tested TikZ patterns from [`latex-tikz`](skills/latex-tikz/SKILL.md), about 20 l
 
 ```bash
 claude plugin install agentex --marketplace Metahemeralism/AgenTeX
+```
+
+Or with the animated installer (it runs the same command):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Metahemeralism/AgenTeX/main/install.sh | bash
 ```
 
 Or from inside Claude Code:
@@ -110,12 +116,22 @@ Restart Claude Code afterwards. To update: `/plugin marketplace update agentex`.
 
 Caches and state live in `.agentex/` in your project, which ignores itself in git.
 
+**The AgenTeX band.** A small band above the prompt shows what AgenTeX is doing while its checks run (verifying citations, typesetting, rendering a figure). TeX's lowered E bobs as it works:
+
+```
+AgenT X  ⠹ verifying citations  4s
+     E
+```
+
+It also plays a one-time welcome after install. Turn it off under `/config` → *Animations*. The band uses Claude Code's hooks-module API, which is marked early access (it may change between releases). It is purely cosmetic: the skills, cite guard and compile loop do not depend on it.
+
 ## Use it
 
 ```text
 > Check every citation in paper/ and show me what's wrong.
 > I reran the experiments. What in the paper is now stale?
 > Make results/main.csv into a table with the best numbers in bold.
+> Suggest diagrams for this repo.          (reads the code, offers high-level and component figures to pick from)
 > Draw the model in src/model.py as a TikZ figure with tensor shapes.
 > Has anyone done this before? Find the closest work to my abstract.
 > Review my paper as a NeurIPS reviewer.
@@ -131,6 +147,7 @@ Caches and state live in `.agentex/` in your project, which ignores itself in gi
 | `latex-references/scripts/check_refs.py paper/` | Undefined/duplicate labels, missing/uncited bib entries |
 | `latex-debug/scripts/texlog.py main.log` | Log digest |
 | `latex-project/scripts/texmap.py paper/` | Compact project map |
+| `latex-tikz/scripts/diagram_ideas.py .` | Diagram ideas from your code (pipelines, architectures, loops, models), each with its pattern and `file:line` |
 | `latex-tikz/scripts/tikzref.py brace decoration` | Offline TikZ manual search |
 | `latex-tikz/scripts/tikzcheck.sh fig.tex` | Compile a figure; errors only + small PNG preview |
 | `latex-research-check/scripts/related.py --from-tex main.tex` | Closest prior work |
@@ -173,7 +190,9 @@ From a ranked study of LaTeX bottlenecks for people who code:
 
 ```
 .claude-plugin/          plugin.json + marketplace.json
-hooks/                   hooks.json, cite_guard.py, compile_loop.py (+ tests)
+hooks/                   hooks.json, cite_guard.py, compile_loop.py, ui.tsx + frames.ts (the band) and tests
+types/                   state contract for the band (TypeScript)
+install.sh               animated installer
 skills/
   latex-references/      cite_verify.py, check_refs.py
   latex-results-sync/    results.py
@@ -194,6 +213,7 @@ Issues and PRs are welcome, especially roadmap items, venue review forms, and er
 - Prefer a deterministic script to instructions wherever a check can be computed. Scripts are standard library only, each with tests:
   ```bash
   for d in hooks skills/*/scripts; do python3 -m unittest discover -s "$d" -q || exit 1; done
+  claude plugin validate . && claude plugin test .     # the band's module, in Claude Code's own test kit
   ```
 - New TikZ patterns must compile standalone with `agentex-tikz.sty`.
 - Try your changes without installing: `claude --plugin-dir path/to/AgenTeX` loads the plugin straight from disk for that session.
