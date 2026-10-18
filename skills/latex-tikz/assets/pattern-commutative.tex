@@ -1,0 +1,10 @@
+% Commutative diagram with tikz-cd (preferred over hand-placed nodes for category-style diagrams).
+\documentclass[border=6pt]{standalone}
+\usepackage{amsmath}
+\usepackage{tikz-cd}
+\begin{document}
+\begin{tikzcd}[row sep=large, column sep=large]
+  A \arrow[r, "f"] \arrow[d, "g"'] \arrow[dr, dashed, "h \circ f" description] & B \arrow[d, "h"] \\
+  C \arrow[r, "k"'] & D
+\end{tikzcd}
+\end{document}

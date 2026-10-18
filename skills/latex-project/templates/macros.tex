@@ -1,0 +1,23 @@
+% macros.tex: single source of truth for notation.
+% Change a symbol here and it changes everywhere. Keep in sync with the
+% notation table (see the latex-math skill).
+
+% Vectors and matrices: bold lowercase / bold uppercase
+\newcommand{\vx}{\bm{x}}
+\newcommand{\vy}{\bm{y}}
+\newcommand{\vtheta}{\bm{\theta}}
+\newcommand{\mW}{\bm{W}}
+
+% Sets and spaces
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\data}{\mathcal{D}}
+
+% Operators
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\loss}{\mathcal{L}}
+
+% Paired delimiters that scale: \norm{x}, \norm*{\frac{a}{b}}
+\DeclarePairedDelimiter{\norm}{\lVert}{\rVert}
+\DeclarePairedDelimiter{\abs}{\lvert}{\rvert}

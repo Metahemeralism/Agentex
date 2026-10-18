@@ -1,0 +1,26 @@
+% Layered network drawn from code: one \foreach row per layer, tensor shapes on one baseline,
+% a residual connection routed above. Edit the list; the drawing follows.
+\documentclass[tikz, border=6pt]{standalone}
+\usepackage{amsmath, bm, graphicx}
+\usepackage{agentex-tikz}
+\begin{document}
+\begin{tikzpicture}[ax, node distance=11mm]  % gap sized so shape labels never collide
+  \coordinate (base) at (0,-15mm);  % shared baseline for the shape annotations
+  \node[layer, minimum height=24mm, fill=white] (l0) {\rotatebox{90}{Input $\bm x$}};
+  \node[dim] at (l0 |- base) {(3,32,32)};
+  % index / label / style / height / output shape (braces protect commas)
+  \foreach \i/\txt/\sty/\h/\dims [remember=\i as \prev (initially 0)] in {
+      1/Conv $3{\times}3$/layer/22mm/{(32,32,32)},
+      2/Conv $3{\times}3$/layer/22mm/{(32,32,32)},
+      3/$+$/op/5mm/{},
+      4/Max-pool/layer/16mm/{(32,16,16)},
+      5/Linear/layer/10mm/{(10)},
+      6/Softmax/layer/10mm/{(10)}} {
+    \node[\sty, minimum height=\h, right=of l\prev] (l\i) {\rotatebox{90}{\txt}};
+    \node[dim] at (l\i |- base) {\dims};
+    \draw[flow] (l\prev) -- (l\i);
+  }
+  \draw[skip] (l1.north) -- ++(0,5mm) -| node[note, pos=0.25, above] {residual} (l3);
+  \draw[flow] (l6) -- ++(9mm,0) node[right] {$\hat{\bm y}$};
+\end{tikzpicture}
+\end{document}

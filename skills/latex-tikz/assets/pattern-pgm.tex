@@ -1,0 +1,21 @@
+% Probabilistic graphical model (LDA-style): latent vs observed (shaded), fixed parameters,
+% nested plates with counts in the bottom-right corner.
+\documentclass[tikz, border=6pt]{standalone}
+\usepackage{amsmath, bm}
+\usepackage{agentex-tikz}
+\begin{document}
+\begin{tikzpicture}[ax, node distance=8mm and 10mm,
+    count/.style={label={[anchor=south east, inner sep=3pt, font=\footnotesize]south east:#1}}]
+  \node[param, label=above:$\alpha$] (alpha) {};
+  \node[var, right=of alpha] (theta) {$\theta_d$};
+  \node[var, right=of theta] (z) {$z_{dn}$};
+  \node[obs, right=of z] (w) {$w_{dn}$};
+  \node[var, above=12mm of w] (beta) {$\beta_k$};
+  \node[param, right=of beta, label=above:$\eta$] (eta) {};
+  \foreach \a/\b in {alpha/theta, theta/z, z/w, beta/w, eta/beta}
+    \draw[flow] (\a) -- (\b);
+  \node[plate, fit=(z)(w), count=$N$] (pN) {};
+  \node[plate, fit=(theta)(pN), inner sep=11pt, count=$D$] {};
+  \node[plate, fit=(beta), count=$K$] {};
+\end{tikzpicture}
+\end{document}

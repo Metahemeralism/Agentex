@@ -1,0 +1,29 @@
+% Transformer encoder block, bottom-to-top as in the literature: residual paths routed on the left,
+% repeated block boxed with x N. Accent fills are paired with distinct labels (not colour-only).
+\documentclass[tikz, border=6pt]{standalone}
+\usepackage{amsmath, bm}
+\usepackage{agentex-tikz}
+\begin{document}
+\begin{tikzpicture}[ax, node distance=5mm, blk/.style={box, minimum width=38mm}]
+  \node[blk] (emb) {Input embedding};
+  \node[op, above=of emb] (pe) {$+$};
+  \node[note, right=3mm of pe] {positional encoding};
+  \node[blk, hi, above=8mm of pe] (mha) {Multi-head attention};
+  \node[blk, above=of mha] (an1) {Add \& norm};
+  \node[blk, hi2, above=8mm of an1] (ffn) {Feed-forward};
+  \node[blk, above=of ffn] (an2) {Add \& norm};
+  \foreach \a/\b in {emb/pe, pe/mha, mha/an1, an1/ffn, ffn/an2}
+    \draw[flow] (\a) -- (\b);
+  \draw[flow] (an2) -- ++(0,8mm) node[above] {$\mathbf{H}^{(l)}$};
+  % Residual branches leave the trunk between blocks and rejoin at add & norm.
+  \foreach \from/\to/\at [count=\r] in {pe/mha/an1, an1/ffn/an2} {
+    \coordinate (r\r) at ($(\from)!0.5!(\to)$);
+    \coordinate (rl\r) at ($(r\r)+(-24mm,0)$);
+    \fill (r\r) circle (1pt);
+    \draw[flow] (r\r) -- (rl\r) |- (\at.west);
+  }
+  \begin{scope}[on background layer]
+    \node[group, fit=(rl1)(mha)(an2), label={[note]right:$\times N$}] {};
+  \end{scope}
+\end{tikzpicture}
+\end{document}

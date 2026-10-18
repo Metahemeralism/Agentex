@@ -1,0 +1,35 @@
+% Data plot with pgfplots: two series (line style + marker, not colour alone) and a +-1 sd band.
+% No [ax] here: its node font would override pgfplots' tick/legend fonts.
+% For real data replace the inline table with: \pgfplotstableread[col sep=comma]{data/loss.csv}\loss
+\documentclass[border=6pt]{standalone}
+\usepackage{amsmath}
+\usepackage{agentex-tikz}
+\usepackage{pgfplots, pgfplotstable}
+\pgfplotsset{compat=1.18}
+\usepgfplotslibrary{fillbetween}
+\pgfplotstableread{
+e  train  val   sd
+1  1.00   1.05  0.08
+2  0.71   0.80  0.07
+3  0.55   0.66  0.06
+4  0.45   0.59  0.05
+5  0.38   0.55  0.05
+6  0.33   0.53  0.04
+7  0.29   0.52  0.04
+8  0.26   0.52  0.04
+}\loss
+\begin{document}
+\begin{tikzpicture}
+  \begin{axis}[width=8cm, height=5cm, xlabel={Epoch}, ylabel={Loss}, ymin=0, ymax=1.5, label style={font=\small},
+      grid=major, grid style={gray!20}, legend cell align=left,
+      legend style={draw=none, font=\footnotesize}, tick label style={font=\footnotesize}]
+    \addplot[name path=up, draw=none, forget plot] table[x=e, y expr=\thisrow{val}+\thisrow{sd}] {\loss};
+    \addplot[name path=lo, draw=none, forget plot] table[x=e, y expr=\thisrow{val}-\thisrow{sd}] {\loss};
+    \addplot[axblue!20, forget plot] fill between[of=up and lo];
+    \addplot[black, mark=*, mark size=1.2pt] table[x=e, y=train] {\loss};
+    \addlegendentry{Train}
+    \addplot[axblue, dashed, mark=square*, mark size=1.2pt] table[x=e, y=val] {\loss};
+    \addlegendentry{Validation ($\pm 1$ sd)}
+  \end{axis}
+\end{tikzpicture}
+\end{document}

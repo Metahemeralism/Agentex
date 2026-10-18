@@ -1,0 +1,16 @@
+{
+  "name": "agentex",
+  "owner": {
+    "name": "Metahemeralism"
+  },
+  "metadata": {
+    "description": "AgenTeX: agent skills for LaTeX research writing, from code to arXiv."
+  },
+  "plugins": [
+    {
+      "name": "agentex",
+      "source": "./",
+      "description": "Agent skills for turning research code into LaTeX papers, figures, talks and arXiv submissions."
+    }
+  ]
+}

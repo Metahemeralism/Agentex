@@ -1,0 +1,17 @@
+% Flowchart: top-to-bottom, labelled decision branches, loop back on the right.
+\documentclass[tikz, border=6pt]{standalone}
+\usepackage{amsmath, bm}
+\usepackage{agentex-tikz}
+\begin{document}
+\begin{tikzpicture}[ax, node distance=6mm]
+  \node[term] (start) {Start};
+  \node[box, below=of start] (init) {Initialise $\bm\theta_0$};
+  \node[box, below=of init] (step) {$\bm\theta_{t+1} \gets \bm\theta_t - \eta \nabla \mathcal{L}(\bm\theta_t)$};
+  \node[decision, below=of step] (conv) {Converged?};
+  \node[term, below=of conv] (stop) {Return $\bm\theta_t$};
+  \foreach \a/\b in {start/init, init/step, step/conv}
+    \draw[flow] (\a) -- (\b);
+  \draw[flow] (conv) -- node[right, font=\footnotesize] {yes} (stop);
+  \draw[flow] (conv.east) -- node[above, font=\footnotesize] {no} ++(10mm,0) |- (step.east);
+\end{tikzpicture}
+\end{document}

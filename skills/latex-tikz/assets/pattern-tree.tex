@@ -1,0 +1,20 @@
+% Tree (decision tree): global level styles, labelled edges, shaded leaves.
+\documentclass[tikz, border=6pt]{standalone}
+\usepackage{amsmath}
+\usepackage{agentex-tikz}
+\begin{document}
+\begin{tikzpicture}[ax,
+    level distance=15mm,
+    level 1/.style={sibling distance=36mm},
+    level 2/.style={sibling distance=18mm},
+    edge from parent/.style={draw, ->},
+    split/.style={box, minimum width=18mm},
+    leaf/.style={term, minimum width=10mm, fill=gray!30}]
+  \node[split] {$x_1 \le 0.5$}
+    child {node[split] {$x_2 \le 1.2$}
+      child {node[leaf] {A} edge from parent node[left, font=\footnotesize] {yes}}
+      child {node[leaf] {B} edge from parent node[right, font=\footnotesize] {no}}
+      edge from parent node[left, font=\footnotesize] {yes}}
+    child {node[leaf] {C} edge from parent node[right, font=\footnotesize] {no}};
+\end{tikzpicture}
+\end{document}

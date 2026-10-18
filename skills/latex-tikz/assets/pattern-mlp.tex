@@ -1,0 +1,24 @@
+% Fully connected network: neurons and all edges from nested \foreach over (layer, size) lists.
+\documentclass[tikz, border=6pt]{standalone}
+\usepackage{amsmath, bm}
+\usepackage{agentex-tikz}
+\begin{document}
+\begin{tikzpicture}[ax, x=20mm, y=9mm]
+  % layer / units / title
+  \foreach \l/\n/\name in {1/3/Input, 2/4/Hidden, 3/2/Output} {
+    \foreach \j in {1,...,\n}
+      \node[neuron] (n\l-\j) at (\l, {(\n+1)/2 - \j}) {};
+    \node[note] at (\l, 2.4) {\name};
+  }
+  % layer / units / units in next layer
+  \foreach \l/\n/\m in {1/3/4, 2/4/2} {
+    \pgfmathtruncatemacro{\nxt}{\l+1}
+    \foreach \j in {1,...,\n}
+      \foreach \k in {1,...,\m}
+        \draw[gray!55] (n\l-\j) -- (n\nxt-\k);
+  }
+  \foreach \j in {1,2,3} \draw[flow] ($(n1-\j)+(-9mm,0)$) node[left] {$x_{\j}$} -- (n1-\j);
+  \foreach \k in {1,2} \draw[flow] (n3-\k) -- ++(9mm,0) node[right] {$\hat y_{\k}$};
+  \draw (n1-1) -- node[above, sloped, font=\scriptsize] {$w^{(1)}_{11}$} (n2-1);  % one labelled weight
+\end{tikzpicture}
+\end{document}

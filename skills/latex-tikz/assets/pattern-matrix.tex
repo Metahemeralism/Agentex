@@ -1,0 +1,19 @@
+% Matrix with delimiters and dimension braces (matrix + decorations.pathreplacing).
+\documentclass[tikz, border=6pt]{standalone}
+\usepackage{amsmath, amssymb}
+\usepackage{agentex-tikz}
+\usetikzlibrary{matrix, decorations.pathreplacing}
+\begin{document}
+\begin{tikzpicture}[ax, brace/.style={decorate, decoration={brace, amplitude=4pt, raise=#1}}]
+  \matrix (W) [matrix of math nodes, left delimiter={[}, right delimiter={]},
+               nodes={minimum size=6mm}, column sep=1mm, row sep=1mm] {
+    w_{11} & w_{12} & \cdots & w_{1d} \\
+    w_{21} & w_{22} & \cdots & w_{2d} \\
+    \vdots & \vdots & \ddots & \vdots \\
+    w_{n1} & w_{n2} & \cdots & w_{nd} \\
+  };
+  \draw[brace=3pt] (W.north west) -- node[above=6pt, font=\footnotesize] {$d$ features} (W.north east);
+  \draw[brace=9pt] (W.south west) -- node[left=12pt, font=\footnotesize] {$n$ samples} (W.north west);
+  \node[right=4mm of W.east] {$\in \mathbb{R}^{n \times d}$};
+\end{tikzpicture}
+\end{document}

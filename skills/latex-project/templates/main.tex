@@ -1,0 +1,96 @@
+\ifdefined\pdftexversion\pdfoutput=1\fi  % arXiv: build with pdfLaTeX (guard keeps XeLaTeX/LuaLaTeX working)
+% Build: latexmk -pdf main.tex
+\documentclass[11pt]{article}
+
+% --- Encoding & fonts (pdfLaTeX) -------------------------------------------
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[margin=1in]{geometry}
+
+% --- Maths ------------------------------------------------------------------
+\usepackage{amsmath, amssymb, amsthm, mathtools, bm}
+\usepackage{siunitx}
+
+% --- Floats -----------------------------------------------------------------
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{subcaption}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning}
+
+% --- Bibliography -----------------------------------------------------------
+\usepackage[style=authoryear, backend=biber, maxcitenames=2]{biblatex}
+\addbibresource{references.bib}
+
+% --- Links & references (keep last) -----------------------------------------
+\usepackage[colorlinks=true, allcolors=blue!50!black]{hyperref}
+\usepackage[capitalise, noabbrev]{cleveref}
+
+% --- Theorem environments ---------------------------------------------------
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+
+\input{macros}
+
+\title{Paper Title}
+\author{Author Name \\ Affiliation \\ \texttt{email@example.org}}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+One paragraph: problem, approach, key result, implication.
+\end{abstract}
+
+\section{Introduction}\label{sec:intro}
+% TODO: motivation, gap, contributions (bullet list), paper outline.
+Prior work~\parencite{example2024} established \dots
+
+\section{Method}\label{sec:method}
+Given a dataset $\data = \{(\vx_i, y_i)\}_{i=1}^{N}$, we minimise
+\begin{equation}
+  \loss(\vtheta) = \frac{1}{N} \sum_{i=1}^{N} \ell\bigl(f_{\vtheta}(\vx_i), y_i\bigr),
+  \label{eq:objective}
+\end{equation}
+as summarised in \cref{alg:train}.
+
+\begin{algorithm}[t]
+  \caption{Training loop}\label{alg:train}
+  \begin{algorithmic}[1]
+    \Require data $\data$, learning rate $\eta$, epochs $E$
+    \For{$e = 1, \dots, E$}
+      \ForAll{minibatch $\mathcal{B} \subset \data$}
+        \State $\vtheta \gets \vtheta - \eta \nabla_{\vtheta} \loss_{\mathcal{B}}(\vtheta)$
+      \EndFor
+    \EndFor
+    \State \Return $\vtheta$
+  \end{algorithmic}
+\end{algorithm}
+
+\section{Results}\label{sec:results}
+\Cref{tab:results} reports test accuracy.
+
+\begin{table}[t]
+  \centering
+  \caption{Test accuracy (mean $\pm$ std over 5 seeds).}\label{tab:results}
+  \begin{tabular}{lS[table-format=2.1(1)]}
+    \toprule
+    Model & {Accuracy (\%)} \\
+    \midrule
+    Baseline & 88.1(4) \\
+    Ours     & 91.3(3) \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Conclusion}\label{sec:conclusion}
+
+\printbibliography
+
+\end{document}

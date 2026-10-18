@@ -1,7 +1,35 @@
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+
+# Local agent settings
+.claude/settings.local.json
+
+# Python
 __pycache__/
 *.pyc
-.DS_Store
-.env
 .venv/
+
+# LaTeX build artefacts (from compiling templates/examples)
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
 *.log
-.cache/
+*.nav
+*.out
+*.run.xml
+*.snm
+*.synctex.gz
+*.toc
+*.vrb
+_minted*/
+build/
+
+# AgenTeX scratch (sources for overlap checks, reviews)
+.agentex/
+arxiv_submission/
+arxiv_submission.tar.gz

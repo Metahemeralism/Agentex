@@ -1,0 +1,22 @@
+{
+  "name": "agentex",
+  "version": "0.2.0",
+  "description": "AgenTeX: 13 agent skills that turn research code into LaTeX papers and talks: equations, TikZ, algorithms, tables, verified citations, code-vs-paper audits, prior-work search, overlap screening, mock peer review, arXiv packaging and compile debugging.",
+  "author": {
+    "name": "Metahemeralism"
+  },
+  "homepage": "https://github.com/Metahemeralism/AgenTeX",
+  "repository": "https://github.com/Metahemeralism/AgenTeX",
+  "license": "MIT",
+  "keywords": [
+    "latex",
+    "tikz",
+    "beamer",
+    "bibtex",
+    "arxiv",
+    "peer-review",
+    "research",
+    "academic-writing",
+    "skills"
+  ]
+}

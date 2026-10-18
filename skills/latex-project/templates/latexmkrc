@@ -1,0 +1,5 @@
+# latexmk config: run `latexmk` in this folder.
+$pdf_mode = 1;            # 1 = pdflatex, 4 = lualatex, 5 = xelatex
+$out_dir = 'build';       # keep aux files out of the source tree
+$bibtex_use = 2;          # run biber/bibtex as needed, clean .bbl on -C
+@default_files = ('main.tex');

@@ -1,0 +1,21 @@
+% Pipeline / block diagram: left-to-right flow, subsystem box, feedback loop below.
+\documentclass[tikz, border=6pt]{standalone}
+\usepackage{amsmath, bm}
+\usepackage{agentex-tikz}
+\begin{document}
+\begin{tikzpicture}[ax]
+  \node[store] (data) {Raw\\data};
+  \node[box, right=of data] (prep) {Pre-\\processing};
+  \node[box, right=of prep] (model) {Model\\$f_{\bm\theta}$};
+  \node[box, right=of model] (eval) {Evaluation};
+  \node[io, right=of eval] (out) {Report};
+  \foreach \a/\b in {data/prep, prep/model, model/eval, eval/out}
+    \draw[flow] (\a) -- (\b);
+  % Subsystem boundary on the background layer so it never hides nodes.
+  \begin{scope}[on background layer]
+    \node[group, fit=(prep)(model), label={[note]above:training stage}] {};
+  \end{scope}
+  % Feedback routed below the main flow with an orthogonal -| path.
+  \draw[skip] (eval.south) -- ++(0,-7mm) -| node[note, pos=0.25, below] {tune $\eta$} (model.south);
+\end{tikzpicture}
+\end{document}
