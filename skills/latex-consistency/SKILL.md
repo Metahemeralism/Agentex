@@ -41,7 +41,7 @@ For each claim, find the evidence (file:line) and classify:
 
 Equations: re-derive from code with the `latex-math` workflow (reductions, indices, constants, $\epsilon$ terms, std vs. variance, log base, 0- vs. 1-indexing).
 
-Results: recompute from raw result files when possible (mean/std over the stated seeds, rounding). Check that bolded "best" values really are best and that ± means what the caption says.
+Results: run `latex-results-sync`'s `results.py audit paper/` first (it finds stale and hard-coded numbers deterministically). Then recompute from raw result files when possible (mean/std over the stated seeds, rounding). Check that bolded "best" values really are best and that ± means what the caption says.
 
 ### 4. Check internal consistency of the paper
 

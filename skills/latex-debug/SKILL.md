@@ -7,6 +7,8 @@ description: "Fix LaTeX compile errors and warnings: a log digest script, an err
 
 ## Workflow
 
+With the AgenTeX plugin installed, a Stop hook already compiles after LaTeX edits and hands you this digest automatically; fix what it reports before finishing.
+
 1. **Compile non-interactively** so errors don't hang:
    `latexmk -pdf -interaction=nonstopmode -halt-on-error -file-line-error main.tex`
    (no toolchain? read the user's `.log`, or ask them to paste it from Overleaf → Logs → Raw logs).

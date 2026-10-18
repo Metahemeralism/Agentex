@@ -1,28 +1,51 @@
 ---
 name: latex-references
-description: "Citations and cross-references: verified BibTeX from DOIs/arXiv (never invented), natbib vs biblatex, cleveref, label conventions, and a linter for undefined or unused labels and citations. Use when adding or fixing references or seeing '??'."
+description: "Verify every citation against Crossref, arXiv, DBLP, Semantic Scholar and OpenAlex (catches fabricated and Frankenstein references), build BibTeX from DOIs, set up natbib/biblatex and cleveref, and lint labels and citations. Use when citing, fixing references or seeing '??'."
 ---
 
 # Citations, Bibliography & Cross-References
 
 ## Golden rule: never invent a citation
 
-Every bib entry must come from a verifiable source. Do **not** write BibTeX from memory for real papers: authors, years, venues and page numbers are easy to hallucinate. Instead:
+Hallucinated references survive peer review: in 2025 roughly one in twenty NeurIPS and USENIX Security papers had at least two likely hallucinated references (Phantom References, arXiv:2607.00738). An LLM checking its own citations is not enough. **An authoritative database lookup makes the final call.**
+
+### 1. Verify (deterministic)
+
+```bash
+python3 <skill>/scripts/cite_verify.py paper/              # every cited key
+python3 <skill>/scripts/cite_verify.py paper/ --keys k1,k2 # just new keys (fast)
+python3 <skill>/scripts/cite_verify.py paper/ --suggest    # corrected entries -> .agentex/suggested.bib
+```
+
+| Status | Meaning | Action |
+|---|---|---|
+| `verified` | found; title, authors and year agree | none |
+| `published` | arXiv preprint with a published version | offer to cite the published version |
+| `mismatch` | the work exists, but your entry's title/authors/year are wrong ("Frankenstein") | show the diff from `--suggest`; apply after approval |
+| `bad-doi` | DOI/arXiv id dead or pointing to a different work | fix the identifier |
+| `not-found` | no match anywhere | **treat as fabricated until the author shows the source** |
+| `unverifiable` | book/thesis/software/web page not indexed | check by hand (URL, ISBN, Zenodo DOI) |
+
+Rules: never edit the user's `.bib` silently. Present `--suggest` output as a diff and wait for approval. Results are cached in `.agentex/` (which ignores itself in git), so re-runs are instant. Set `S2_API_KEY` for reliable preprint→published detection (Semantic Scholar rate-limits anonymous use) and `AGENTEX_MAILTO` for Crossref's polite pool. dblp currently blocks scripted access behind a bot check, so the tool skips it automatically when that happens.
+
+**Cite guard (plugin hook):** with the AgenTeX plugin installed, an edit that adds a `\cite{key}` whose entry isn't verified is blocked, and the block message gives the exact verify command. Don't work around it: verify, or tell the user the source can't be confirmed.
+
+### 2. Get entries from sources, never from memory
 
 1. **DOI** → `curl -sLH "Accept: application/x-bibtex" https://doi.org/<DOI>`
-2. **arXiv** → `https://arxiv.org/bibtex/<arXiv-id>` (and prefer the published version if one exists)
-3. **Search** (if tools are available): Crossref (`https://api.crossref.org/works?query=...`), Semantic Scholar, DBLP (`https://dblp.org/search?q=...`), Google Scholar export.
-4. If none can be verified, insert a placeholder `\cite{TODO-verify-<topic>}` and tell the user; never fabricate.
+2. **arXiv** → `https://arxiv.org/bibtex/<arXiv-id>`, and prefer the published version if one exists
+3. **Search** with `latex-research-check` or the APIs above, then run `cite_verify.py` on the result.
+4. If nothing verifies, insert `\cite{TODO-verify-<topic>}` and tell the user. Never fabricate.
 
 When the user asks "find a citation for X", return candidates *with links* and let them choose.
 
-## Lint the project
+### 3. Lint labels and keys
 
 ```bash
-python3 <this-skill>/scripts/check_refs.py path/to/paper
+python3 <skill>/scripts/check_refs.py paper/
 ```
 
-Reports: undefined references, duplicate labels, citations missing from `.bib`, duplicate bib keys (errors), and unreferenced labels / uncited bib entries (warnings). Run it after every non-trivial edit; it's fast and needs only Python.
+Reports undefined references, duplicate labels, citations missing from `.bib` and duplicate bib keys (errors), plus unreferenced labels and uncited entries (warnings).
 
 ## Choosing a system
 

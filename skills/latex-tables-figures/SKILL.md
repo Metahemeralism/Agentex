@@ -5,7 +5,7 @@ description: "Turn results, dataframes and CSVs into booktabs/siunitx tables and
 
 # Results → Tables & Figures
 
-Core principle: **generate, don't transcribe.** Numbers typed by hand into a paper drift from the code. Have a script write `.tex`/`.pdf` files into `paper/tables/` and `paper/figures/`, and `\input` them. Report the generated file's path in chat; don't paste the table back.
+Core principle: **generate, don't transcribe.** Numbers typed by hand into a paper drift from the code. Have a script write `.tex`/`.pdf` files into `paper/tables/` and `paper/figures/`, and `\input` them. Report the generated file's path in chat; don't paste the table back. For the full pipeline (results registry, stale-number audit, figure provenance), use `latex-results-sync`.
 
 ## Tables
 

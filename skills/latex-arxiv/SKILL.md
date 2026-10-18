@@ -1,13 +1,13 @@
 ---
 name: latex-arxiv
-description: "Package a LaTeX project for arXiv. Ships only the files the document uses, strips comments, includes the .bbl, catches arXiv-specific failures (path case, biblatex/biber, minted, EPS, size) and test-compiles the package. Use when submitting to arXiv or cleaning a source folder to share."
+description: "Package a LaTeX project for arXiv. Ships only the files the document uses, strips comments, ships the .bbl or .bib, catches arXiv-specific failures (path case, biblatex/biber, minted, EPS, size) and test-compiles the package. Use when submitting to arXiv or cleaning a source folder to share."
 ---
 
 # arXiv Packaging
 
 ## Workflow
 
-1. **Compile locally first** so the `.bbl` is fresh: `latexmk -pdf main.tex`.
+1. **Compile locally first** so the `.bbl` is fresh: `latexmk -pdf main.tex`. Run `latex-references`'s `cite_verify.py` too, because a fabricated reference on arXiv is public and permanent.
 2. **Package and test:**
    ```bash
    python3 scripts/arxiv_pack.py paper/main.tex --compile
@@ -22,10 +22,13 @@ description: "Package a LaTeX project for arXiv. Ships only the files the docume
 
 ## What the script checks (and why)
 
+arXiv rules checked against info.arxiv.org/help/submit_tex.html (October 2026): TeX Live 2025 is the default (2023 is also available).
+
+
 | Problem | Why arXiv fails | Fix |
 |---|---|---|
-| Missing `main.bbl` | arXiv doesn't run biber, and may not run BibTeX | compile locally, ship the `.bbl` (done automatically) |
-| biblatex `.bbl` version mismatch | arXiv's TeX Live may have a different biblatex | compile with a matching TeX Live year, or switch to BibTeX + natbib |
+| No bibliography source | since 2025 arXiv runs BibTeX/biber on shipped `.bib` files, and uses a `.bbl` if one is present | the script ships the `.bbl` if it exists, otherwise the `.bib` files |
+| biblatex `.bbl` format ≠ 3.3 | arXiv's default TeX Live 2025 only reads `.bbl` format 3.3 (it is written on line 2 of the `.bbl`) | `--prefer-bib`: ship the `.bib` and let arXiv run biber |
 | `Figures/A.pdf` vs `figures/a.pdf` | macOS/Windows ignore case; arXiv's Linux doesn't | rename to match exactly |
 | `../` or absolute paths | only the uploaded folder exists | move files inside the project |
 | `minted`, `\tikzexternalize`, `\includesvg` | no `-shell-escape` on arXiv | minted `finalizecache`→`frozencache`; ship PDFs |

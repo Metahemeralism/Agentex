@@ -77,6 +77,7 @@ The same layout works on Overleaf. Upload the `paper/` folder as a zip, set the 
 - Diagrams → `latex-tikz`
 - Pseudocode/listings → `latex-algorithms`
 - Tables/plots from results → `latex-tables-figures`
+- Numbers/figures in sync with code (registry, stale audit, provenance) → `latex-results-sync`
 - Bibliography/cross-references → `latex-references`
 - Check paper against code → `latex-consistency`
 - Slides → `latex-beamer`

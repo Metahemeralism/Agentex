@@ -1,7 +1,7 @@
 {
   "name": "agentex",
-  "version": "0.2.0",
-  "description": "AgenTeX: 13 agent skills that turn research code into LaTeX papers and talks: equations, TikZ, algorithms, tables, verified citations, code-vs-paper audits, prior-work search, overlap screening, mock peer review, arXiv packaging and compile debugging.",
+  "version": "0.3.0",
+  "description": "AgenTeX: 14 skills + 2 hooks that keep LaTeX papers honest to the code behind them: verified citations with a cite guard, results-to-macros sync with stale-number audits, a compile-and-fix loop, TikZ, equations, tables, prior-work search, overlap screening, mock peer review and arXiv packaging.",
   "author": {
     "name": "Metahemeralism"
   },
