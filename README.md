@@ -80,12 +80,20 @@ Tested TikZ patterns from [`latex-tikz`](skills/latex-tikz/SKILL.md), about 20 l
 
 ## Install
 
-**Claude Code plugin (skills + hooks), recommended:**
+**Claude Code plugin (skills + hooks), recommended.** One command in your terminal:
+
+```bash
+claude plugin install agentex --marketplace Metahemeralism/AgenTeX
+```
+
+Or from inside Claude Code:
 
 ```text
 /plugin marketplace add Metahemeralism/AgenTeX
-/plugin install agentex@agentex
+/plugin install agentex
 ```
+
+Restart Claude Code afterwards. To update: `/plugin marketplace update agentex`.
 
 **Skills only** (no hooks): `cp -r AgenTeX/skills/* ~/.claude/skills/`. To get the guarantees without the plugin, copy the `hooks` block from [`hooks/hooks.json`](hooks/hooks.json) into your `settings.json`, replacing `${CLAUDE_PLUGIN_ROOT}` with your clone's path.
 
@@ -188,6 +196,7 @@ Issues and PRs are welcome, especially roadmap items, venue review forms, and er
   for d in hooks skills/*/scripts; do python3 -m unittest discover -s "$d" -q || exit 1; done
   ```
 - New TikZ patterns must compile standalone with `agentex-tikz.sty`.
+- Try your changes without installing: `claude --plugin-dir path/to/AgenTeX` loads the plugin straight from disk for that session.
 
 ## License
 
