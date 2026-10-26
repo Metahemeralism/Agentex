@@ -1,6 +1,6 @@
 ---
 name: latex-debug
-description: "Fix LaTeX compile errors and warnings: a log digest script, an error lookup table and a bisection workflow for undefined commands, missing packages, Unicode, floats, TikZ and bibliography failures. Use whenever compilation fails or shows '??'."
+description: "Build LaTeX with the right engine (pdfLaTeX, XeLaTeX or LuaLaTeX, missing-package check, PNG previews, PDF/A) and fix compile errors and warnings with a log digest, an error lookup table and bisection. Use whenever you compile, or a build fails or shows '??'."
 ---
 
 # LaTeX Compile Debugging
@@ -9,9 +9,9 @@ description: "Fix LaTeX compile errors and warnings: a log digest script, an err
 
 With the AgenTeX plugin installed, a Stop hook already compiles after LaTeX edits and hands you this digest automatically; fix what it reports before finishing.
 
-1. **Compile non-interactively** so errors don't hang:
-   `latexmk -pdf -interaction=nonstopmode -halt-on-error -file-line-error main.tex`
-   (no toolchain? read the user's `.log`, or ask them to paste it from Overleaf → Logs → Raw logs).
+1. **Build with the right engine:** `python3 <skill>/scripts/build.py main.tex [--preview previews --pages 1-2]`.
+   It picks pdfLaTeX, XeLaTeX (`fontspec`, `xeCJK`, `polyglossia`, `unicode-math`) or LuaLaTeX from the source (a `% !TEX program = …` line or a latexmkrc wins), lists packages missing from the TeX installation *before* compiling, runs latexmk (or tectonic), and prints the digest from step 3. `--pdfa` adds a PDF/A-2b copy and `--clean` removes aux files.
+   (No toolchain? Read the user's `.log`, or ask them to paste it from Overleaf → Logs → Raw logs.)
 2. **Fix the first error only**, then recompile. Later errors are usually cascades.
 3. **Digest the log; don't read it.** `python3 scripts/texlog.py main.log` prints the first errors with `file:line` and source context, and groups the warnings (~20 lines instead of thousands). The `l.NN` line shows where TeX *noticed* the problem, which is often just after the real cause, so open only a few lines around it.
 4. **Bisect** if the message is unhelpful: comment out half the body (or `\end{document}` early) until the error disappears; for preamble issues, comment out packages one at a time.
@@ -48,7 +48,12 @@ With the AgenTeX plugin installed, a Stop hook already compiles after LaTeX edit
 - `Underfull \hbox/\vbox`: usually from manual `\\` or `\newline` in paragraphs; remove them.
 - `Font shape … undefined, using … instead`: missing bold/italic of a font; load `lmodern` or a complete font package.
 - `Float too large for page`: resize to `\textheight`/`\linewidth`.
+- Silent failure, no warning: `<` and `>` in text print as ¡ and ¿ under the default OT1 encoding. Load `\usepackage[T1]{fontenc}`.
 - `There were multiply-defined labels`: duplicate `\label`; the checker script finds them.
+
+## Lint before compiling (optional)
+
+`chktex -q -l <skill>/chktexrc main.tex` catches spacing, dash, quote and math-delimiter slips that compile without complaint. The bundled `chktexrc` silences the false positives that generated LaTeX triggers. Treat its output as suggestions.
 
 ## Hygiene
 

@@ -1,0 +1,21 @@
+% Placeholder teaser (from latex-tikz's pattern-pipeline.tex). Redraw it from the code with the latex-tikz skill.
+% Spans the text width (figure* in the section file). Check alone: bash <latex-tikz>/scripts/tikzcheck.sh figures/overview.tex
+% Embedded with \input via the standalone package, so main.tex's preamble must load everything used here.
+\documentclass[tikz, border=6pt]{standalone}
+\usepackage{amsmath, bm}
+\usepackage{agentex-tikz}
+\begin{document}
+\begin{tikzpicture}[ax]
+  \node[store] (data) {Input\\data};
+  \node[box, right=of data] (prep) {Pre-\\processing};
+  \node[box, right=of prep] (model) {Model\\$f_{\bm\theta}$};
+  \node[box, right=of model] (eval) {Evaluation};
+  \node[io, right=of eval] (out) {Results};
+  \foreach \a/\b in {data/prep, prep/model, model/eval, eval/out}
+    \draw[flow] (\a) -- (\b);
+  \begin{scope}[on background layer]
+    \node[group, fit=(prep)(model), label={[note]above:training stage}] {};
+  \end{scope}
+  \draw[skip] (eval.south) -- ++(0,-7mm) -| node[note, pos=0.25, below] {tune $\eta$} (model.south);
+\end{tikzpicture}
+\end{document}

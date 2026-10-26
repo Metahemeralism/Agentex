@@ -1,0 +1,60 @@
+% agentex-tikz.sty: one shared style sheet for every figure in a paper.
+% Defining styles once (here) instead of per figure keeps figures consistent
+% and keeps each figure file short. Use: \begin{tikzpicture}[ax] ... \end{tikzpicture}
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{agentex-tikz}[2026/10/13 v0.2 AgenTeX academic TikZ styles]
+\RequirePackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, calc, fit, backgrounds, shapes.geometric, quotes}
+
+% Okabe-Ito colour-blind-safe accents. Greyscale is the default; accents are
+% opt-in and must be paired with a second cue (dash pattern, shape, label).
+\definecolor{axblue}{HTML}{0072B2}
+\definecolor{axorange}{HTML}{E69F00}
+\definecolor{axgreen}{HTML}{009E73}
+\definecolor{axred}{HTML}{D55E00}
+\colorlet{axfill}{gray!12}
+\colorlet{axmuted}{gray!65!black}
+
+\tikzset{
+  % Apply to a picture: sets line weight, arrow tip, fonts and spacing.
+  ax/.style={
+    semithick, line cap=round, line join=round,
+    >={Stealth[length=5pt, width=3.5pt]},
+    every node/.append style={font=\small},
+    node distance=7mm and 14mm,  % vertical and horizontal gap: the one layout knob
+  },
+  % Process / module / layer.
+  box/.style={draw, rectangle, rounded corners=1pt, fill=axfill,
+    minimum width=20mm, minimum height=8mm, align=center, inner sep=3pt},
+  % Tall thin block for a network layer drawn side-on.
+  layer/.style={box, minimum width=6mm, minimum height=22mm, inner sep=1pt},
+  % Small operator: \oplus, \otimes, \sigma.
+  op/.style={draw, circle, fill=white, minimum size=5mm, inner sep=0pt, font=\footnotesize},
+  % Flowchart shapes.
+  term/.style={draw, rectangle, rounded corners=3.5mm, minimum width=20mm,
+    minimum height=7mm, align=center},
+  decision/.style={draw, diamond, aspect=2.2, fill=axfill, align=center, inner sep=1pt},
+  io/.style={draw, trapezium, trapezium left angle=72, trapezium right angle=108,
+    trapezium stretches=true, minimum width=20mm, minimum height=7mm, align=center},
+  store/.style={draw, cylinder, shape border rotate=90, aspect=0.2, fill=axfill,
+    minimum width=12mm, minimum height=9mm, align=center},
+  % Graphical models: latent, observed, fixed parameter, plate.
+  var/.style={draw, circle, minimum size=9mm, inner sep=1pt},
+  obs/.style={var, fill=gray!30},
+  param/.style={circle, fill=black, inner sep=1.3pt},
+  plate/.style={draw, rounded corners=2pt, inner sep=9pt},
+  % Network diagrams.
+  neuron/.style={draw, circle, fill=axfill, minimum size=6mm, inner sep=0pt},
+  % Edges.
+  flow/.style={->},
+  skip/.style={->, dashed},
+  aux/.style={dotted, axmuted},
+  % Annotations.
+  dim/.style={font=\scriptsize\ttfamily, text=axmuted},  % tensor shapes, sizes
+  note/.style={font=\footnotesize\itshape, text=axmuted, align=center},
+  group/.style={draw, dashed, rounded corners=3pt, inner sep=5pt},  % with fit=(a)(b)
+  % Opt-in accents (always combine with a non-colour cue).
+  hi/.style={draw=axblue, fill=axblue!12},
+  hi2/.style={draw=axorange, fill=axorange!15},
+}
+\endinput

@@ -1,16 +1,23 @@
 \ifdefined\pdftexversion\pdfoutput=1\fi  % arXiv: build with pdfLaTeX (guard keeps XeLaTeX/LuaLaTeX working)
 % Build: latexmk -pdf main.tex
+%
+% Layout switch: keep exactly ONE \documentclass line.
+%   one column: journals, reports, arXiv preprints, NeurIPS/ICLR-style venues
+%   two column: IEEE, ACM, ICML, CVPR, ACL-style venues
+% Wide floats use figure*/table*: they span both columns in two-column mode and act as plain figure/table in one.
 \documentclass[11pt]{article}
+% \documentclass[10pt,twocolumn]{article}
 
 % --- Encoding & fonts (pdfLaTeX) -------------------------------------------
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
 \usepackage{microtype}
-\usepackage[margin=1in]{geometry}
+\usepackage[margin=1in, columnsep=0.25in]{geometry}
 
 % --- Maths ------------------------------------------------------------------
 \usepackage{amsmath, amssymb, amsthm, mathtools, bm}
 \usepackage{siunitx}
+\sisetup{detect-weight, mode=match}  % lets \bfseries mark the best number inside S columns
 
 % --- Floats -----------------------------------------------------------------
 \usepackage{graphicx}
@@ -18,12 +25,25 @@
 \usepackage{subcaption}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
-\usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning}
+\usepackage{standalone}  % \input standalone figure files; their preambles are skipped, so load what they need here
+\makeatletter\def\input@path{{figures/}}\makeatother  % find figures/agentex-tikz.sty, kept there for tikzcheck.sh
+\usepackage{agentex-tikz}  % shared TikZ styles (latex-tikz skill)
+\usepackage{pgfplots, pgfplotstable}
+\pgfplotsset{compat=1.18}
+\usepgfplotslibrary{fillbetween}
 
 % --- Bibliography -----------------------------------------------------------
 \usepackage[style=authoryear, backend=biber, maxcitenames=2]{biblatex}
 \addbibresource{references.bib}
+
+% --- Placeholder text: delete this block once grep finds no \guide or \filler left --
+\usepackage{xcolor}
+\usepackage{lipsum, xfp}  % xfp provides \fpeval on pre-2022 kernels (empty stub on newer ones)
+\newcommand{\fillerscale}{1}  % estimated length: see the pages -> scale table in the latex-project skill
+% \filler{first}{n}: round(n * \fillerscale) lorem-ipsum paragraphs from paragraph `first`; none when that rounds to 0.
+\newcommand{\filler}[2]{\ifnum\fpeval{round(#2 * \fillerscale)}>0 \lipsum[#1-\fpeval{#1 - 1 + round(#2 * \fillerscale)}]\fi}
+% \guide{...}: what this part must say, in grey so unwritten parts stand out in the PDF.
+\newcommand{\guide}[1]{{\color{gray}\itshape [#1]\par}}
 
 % --- Links & references (keep last) -----------------------------------------
 \usepackage[colorlinks=true, allcolors=blue!50!black]{hyperref}
@@ -35,62 +55,40 @@
 \theoremstyle{definition}
 \newtheorem{definition}[theorem]{Definition}
 
+% article has no \keywords; venue classes do (IEEEkeywords, acmart \keywords, llncs \keywords).
+\newcommand{\keywords}[1]{\par\medskip\noindent\textbf{Keywords:} #1}
+
 \input{macros}
 
-\title{Paper Title}
-\author{Author Name \\ Affiliation \\ \texttt{email@example.org}}
-\date{\today}
+\title{Paper Title: A Descriptive Subtitle}
+% Double-blind review: use \author{Anonymous Authors} and drop the acknowledgements.
+\author{First Author \\ Affiliation \\ \texttt{first@example.org}
+  \and Second Author \\ Affiliation \\ \texttt{second@example.org}}
+\date{}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-One paragraph: problem, approach, key result, implication.
+\guide{One paragraph, 150--250 words: problem, gap, approach, headline result with a number, implication.}
+\lipsum[1][1-7]
+\keywords{keyword one; keyword two; keyword three; keyword four}
 \end{abstract}
 
-\section{Introduction}\label{sec:intro}
-% TODO: motivation, gap, contributions (bullet list), paper outline.
-Prior work~\parencite{example2024} established \dots
+\input{sections/intro}
+\input{sections/related}
+\input{sections/method}
+\input{sections/experiments}
+\input{sections/results}
+\input{sections/discussion}
+\input{sections/conclusion}
 
-\section{Method}\label{sec:method}
-Given a dataset $\data = \{(\vx_i, y_i)\}_{i=1}^{N}$, we minimise
-\begin{equation}
-  \loss(\vtheta) = \frac{1}{N} \sum_{i=1}^{N} \ell\bigl(f_{\vtheta}(\vx_i), y_i\bigr),
-  \label{eq:objective}
-\end{equation}
-as summarised in \cref{alg:train}.
-
-\begin{algorithm}[t]
-  \caption{Training loop}\label{alg:train}
-  \begin{algorithmic}[1]
-    \Require data $\data$, learning rate $\eta$, epochs $E$
-    \For{$e = 1, \dots, E$}
-      \ForAll{minibatch $\mathcal{B} \subset \data$}
-        \State $\vtheta \gets \vtheta - \eta \nabla_{\vtheta} \loss_{\mathcal{B}}(\vtheta)$
-      \EndFor
-    \EndFor
-    \State \Return $\vtheta$
-  \end{algorithmic}
-\end{algorithm}
-
-\section{Results}\label{sec:results}
-\Cref{tab:results} reports test accuracy.
-
-\begin{table}[t]
-  \centering
-  \caption{Test accuracy (mean $\pm$ std over 5 seeds).}\label{tab:results}
-  \begin{tabular}{lS[table-format=2.1(1)]}
-    \toprule
-    Model & {Accuracy (\%)} \\
-    \midrule
-    Baseline & 88.1(4) \\
-    Ours     & 91.3(3) \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-\section{Conclusion}\label{sec:conclusion}
+\section*{Acknowledgements}
+\guide{Funding, compute and people. Leave out of anonymous submissions.}
 
 \printbibliography
+
+\appendix
+\input{sections/appendix}
 
 \end{document}

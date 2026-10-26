@@ -10,7 +10,7 @@ Modes: **full review** (default) · **panel** (3 reviewers + area-chair meta-rev
 ## Workflow
 
 1. **Venue.** Infer it from the class/style file (`neurips_*.sty`, `icml*.sty`, `iclr*.sty`, `acl.sty`, `cvpr.sty`, `IEEEtran`, …) or ask. Read only that venue's section of [forms.md](forms.md). Forms change yearly; if the current reviewer guidelines are available, follow them instead.
-2. **Map, then read in reviewer order.** Run the `latex-project` skill's `scripts/texmap.py` first. Then read: title/abstract → introduction (contributions) → figures and tables with captions → method → experiments → limitations → related work → appendix (only as needed).
+2. **Map, then read in reviewer order.** Run `<skill>/../latex-project/scripts/texmap.py` first. Then read: title/abstract → introduction (contributions) → figures and tables with captions → method → experiments → limitations → related work → appendix (only as needed).
 3. **Claims ledger.** For every contribution claimed in the abstract or introduction, record the evidence (section, table or figure) and a verdict: supported / partly / unsupported. The ledger drives the soundness score.
 4. **Assess** originality (closest work; run `latex-research-check` when novelty is in doubt), soundness (assumptions, proofs, baselines, ablations, seeds and variance, statistical tests, data leakage, compute fairness), significance, clarity, reproducibility (code, hyperparameters, data, compute), and limitations/ethics.
 5. **Write the review** in the venue's form:
@@ -35,7 +35,7 @@ Modes: **full review** (default) · **panel** (3 reviewers + area-chair meta-rev
    - no identifying URLs (use anonymous.4open.science); `\hypersetup{pdfauthor={}}`; anonymised supplement
    - page limit met; required sections present (limitations, broader impact, venue checklist); template margins and fonts unmodified
    - Quick scan: `grep -rniE "github\.com/|acknowledg|our (previous|prior) work|\\\\author\{" paper/`
-9. **Rebuttal prep.** List the 5 most likely criticisms, each with an evidence-backed response and any extra experiment it needs.
+9. **Rebuttal prep.** List the 5 most likely criticisms, each with an evidence-backed response and any extra experiment it needs. For the revised version, attach a change-tracked PDF: `latexdiff-vc --git --flatten -r v1-submitted main.tex` (`latex-convert`, section D).
 
 ## Output
 

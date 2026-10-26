@@ -21,6 +21,13 @@ const LABELS: [RegExp, string][] = [
   [/overlap\.py/, 'screening for overlap'],
   [/check_refs\.py/, 'checking references'],
   [/texmap\.py/, 'mapping the project'],
+  [/texstats\.py/, 'counting words'],
+  [/latex-debug\/scripts\/build\.py|build\.py\b.*\.tex\b/, 'typesetting'],
+  [/pdftool\.py/, 'working on the PDF'],
+  [/mail_merge\.py/, 'merging documents'],
+  [/check_fragments\.py/, 'checking converted pages'],
+  [/\blatexdiff/, 'marking changes between versions'],
+  [/\bpandoc\b/, 'converting the document'],
   [/\b(latexmk|tectonic|pdflatex|lualatex|xelatex)\b/, 'typesetting'],
 ]
 

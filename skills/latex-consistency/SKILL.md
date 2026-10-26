@@ -13,7 +13,7 @@ Goal: find every place where the manuscript and the code disagree, or where the 
 
 - **Paper**: all `.tex` files (resolve `\input`/`\include`), generated tables, figure captions, appendix, supplementary material.
 - **Code**: model/algorithm implementation, configs (`yaml`, `json`, `toml`, argparse defaults, Hydra configs), training/eval scripts, result files (CSV/JSON/logs), README, `CITATION.cff`.
-- Save tokens: map the paper with the `latex-project` skill's `scripts/texmap.py`, and on the code side `grep -rn` for each claimed value or name instead of reading whole files.
+- Save tokens: map the paper with `<skill>/../latex-project/scripts/texmap.py`, and on the code side `grep -rn` for each claimed value or name instead of reading whole files.
 - Determine which code version the paper describes (git tag/commit, if stated). Audit against that.
 
 ### 2. Extract claims from the paper
@@ -51,7 +51,7 @@ Results: run `latex-results-sync`'s `results.py audit paper/` first (it finds st
 - Notation drift (see `latex-math` notation audit).
 - Dataset sizes/splits that don't add up; percentages that don't sum.
 - Method described differently in the main text vs. algorithm box vs. appendix.
-- Cross-references: run `latex-references/scripts/check_refs.py`.
+- Cross-references: run `<skill>/../latex-references/scripts/check_refs.py`.
 - Overclaiming: "significantly" without a test; "state of the art" without comparison to it; causal language for correlational results.
 
 ### 5. Methodology red flags (report even if code and paper agree)

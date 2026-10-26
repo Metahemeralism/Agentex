@@ -15,7 +15,7 @@ A talk is not a paper read aloud. Slides carry **one idea each**, the speaker ca
    Title → Problem & why it matters → Key idea (one picture) → Method (2–4 slides) → Main result (1–2 slides) → Ablation/insight → Limitations → Take-home message → Backup slides.
 4. **Reuse assets** from the paper: `\input` the same `macros.tex` so notation is identical; include the same figure PDFs/TikZ (scaled up: fonts in slides need to be ~2× paper size); never screenshot equations.
 5. **Write:** `cp templates/talk.tex talk.tex`, then edit frame by frame. Don't regenerate the whole deck to change one slide.
-6. **Compile** (`latexmk -pdf talk.tex`) and check for overflow: `Overfull \vbox` means content falls off a slide. Use `latex-debug`'s `scripts/texlog.py talk.log` to list them instead of reading the log.
+6. **Compile** (`latexmk -pdf talk.tex`) and check for overflow: `Overfull \vbox` means content falls off a slide. Use `python3 <skill>/../latex-debug/scripts/texlog.py talk.log` to list them instead of reading the log.
 
 ## Slide rules
 
@@ -42,3 +42,5 @@ A talk is not a paper read aloud. Slides carry **one idea each**, the speaker ca
 ## Themes
 
 Default to a clean minimal setup (`metropolis` if installed, else `default` with `\usecolortheme{seahorse}` or `beaver`). Remove navigation symbols. Respect institutional themes when provided; don't restyle them.
+
+Poster for the same paper → `latex-poster` (same macros, figures and `\res{}` numbers).

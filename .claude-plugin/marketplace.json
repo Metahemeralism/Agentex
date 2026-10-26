@@ -10,7 +10,7 @@
     {
       "name": "agentex",
       "source": "./",
-      "description": "Agent skills for turning research code into LaTeX papers, figures, talks and arXiv submissions."
+      "description": "Agent skills for turning research code into LaTeX papers, figures, talks, posters and arXiv submissions, plus CVs, theses, exams, document conversion and PDF finishing."
     }
   ]
 }

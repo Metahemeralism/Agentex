@@ -12,13 +12,13 @@ Needs latexmk or tectonic on PATH (otherwise does nothing). Disable with AGENTEX
 import json
 import os
 import re
-import shutil
 import subprocess
 import sys
 from pathlib import Path
 
 PLUGIN = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PLUGIN / 'skills' / 'latex-debug' / 'scripts'))
+from build import compile_cmd  # noqa: E402
 from texlog import digest  # noqa: E402
 
 SRC = {'.tex', '.bib', '.sty', '.cls', '.bst'}
@@ -69,13 +69,8 @@ def save_state(root, state):
 
 def build(main):
     """Compile; return the log text, or None if no engine / timeout."""
-    has_rc = any(p.exists() for p in (main.parent / 'latexmkrc', main.parent / '.latexmkrc', Path.home() / '.latexmkrc'))
-    if shutil.which('latexmk'):
-        # A latexmkrc chooses the engine (e.g. lualatex); only force pdflatex when there is none.
-        cmd = ['latexmk', *([] if has_rc else ['-pdf']), '-interaction=nonstopmode', '-halt-on-error', '-file-line-error', main.name]
-    elif shutil.which('tectonic'):
-        cmd = ['tectonic', '--keep-logs', main.name]
-    else:
+    cmd = compile_cmd(main)  # picks xelatex/lualatex from the source, respects a latexmkrc
+    if cmd is None:
         return None
     try:
         subprocess.run(cmd, cwd=main.parent, capture_output=True, timeout=BUILD_TIMEOUT)

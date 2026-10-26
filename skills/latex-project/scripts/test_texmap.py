@@ -32,6 +32,20 @@ class TexmapTest(unittest.TestCase):
         self.assertIn('todos (1): sections/intro.tex:2', m)
         self.assertIn('standalone figures (1): figures/fig.tex', m)
 
+    def test_template_scaffold(self):
+        templates = Path(__file__).resolve().parent.parent / 'templates'
+        m = build_map(templates)
+        for heading in ('Introduction [sec:intro]', 'Results [sec:results]', 'Hyperparameters [app:hyperparams]'):
+            self.assertIn(heading, m)
+        self.assertNotIn('MISSING', m)
+        self.assertIn('standalone figures (2)', m)
+
+    def test_template_tikz_styles_match_latex_tikz(self):
+        # The template carries its own copy so it compiles as-is; it must not drift from the original.
+        skills = Path(__file__).resolve().parent.parent.parent
+        self.assertEqual((skills / 'latex-project' / 'templates' / 'figures' / 'agentex-tikz.sty').read_bytes(),
+                         (skills / 'latex-tikz' / 'assets' / 'agentex-tikz.sty').read_bytes())
+
     def test_budget(self):
         with tempfile.TemporaryDirectory() as d:
             (Path(d) / 'main.tex').write_text('\\documentclass{article}\\begin{document}\n' +

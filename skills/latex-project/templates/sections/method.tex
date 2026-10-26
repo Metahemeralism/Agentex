@@ -1,0 +1,36 @@
+\section{Method}\label{sec:method}
+
+\guide{Enough detail to reimplement. Define every symbol once; notation lives in macros.tex (\texttt{latex-math} skill).}
+
+\subsection{Problem Formulation}\label{sec:problem}
+\begin{definition}[Task]\label{def:task}
+  Given a dataset $\data = \{(\vx_i, y_i)\}_{i=1}^{N}$ with inputs $\vx_i \in \R^{d}$, learn a predictor $f_{\vtheta}$ with parameters $\vtheta$.
+\end{definition}
+We minimise the empirical risk
+\begin{equation}
+  \loss(\vtheta) = \frac{1}{N} \sum_{i=1}^{N} \ell\bigl(f_{\vtheta}(\vx_i), y_i\bigr).
+  \label{eq:objective}
+\end{equation}
+\filler{8}{1}
+
+\subsection{Model}\label{sec:model}
+\guide{Components in the order data flows through them (\cref{fig:overview}).}
+\filler{9}{2}
+
+\subsection{Training}\label{sec:training}
+\Cref{alg:train} summarises the optimisation of \cref{eq:objective}.
+
+\begin{algorithm}[t]
+  \caption{Training loop}\label{alg:train}
+  \begin{algorithmic}[1]
+    \Require data $\data$, learning rate $\eta$, epochs $E$
+    \For{$e = 1, \dots, E$}
+      \ForAll{minibatch $\mathcal{B} \subset \data$}
+        \State $\vtheta \gets \vtheta - \eta \nabla_{\vtheta} \loss_{\mathcal{B}}(\vtheta)$
+      \EndFor
+    \EndFor
+    \State \Return $\vtheta$
+  \end{algorithmic}
+\end{algorithm}
+
+\filler{11}{1}

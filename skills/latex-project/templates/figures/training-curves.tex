@@ -1,0 +1,35 @@
+% Placeholder plot (from latex-tikz's pattern-plot.tex). Width follows \columnwidth, so it fits one- and two-column layouts.
+% For real data: \pgfplotstableread[col sep=comma]{data/loss.csv}\curves   (latex-results-sync tracks provenance)
+% Embedded with \input via the standalone package: the table is read inside the document, not the preamble.
+\documentclass[border=6pt]{standalone}
+\usepackage{amsmath}
+\usepackage{agentex-tikz}
+\usepackage{pgfplots, pgfplotstable}
+\pgfplotsset{compat=1.18}
+\usepgfplotslibrary{fillbetween}
+\begin{document}
+\pgfplotstableread{
+e  train  val   sd
+1  1.00   1.05  0.08
+2  0.71   0.80  0.07
+3  0.55   0.66  0.06
+4  0.45   0.59  0.05
+5  0.38   0.55  0.05
+6  0.33   0.53  0.04
+7  0.29   0.52  0.04
+8  0.26   0.52  0.04
+}\curves
+\begin{tikzpicture}
+  \begin{axis}[width=\columnwidth, height=0.62\columnwidth, xlabel={Epoch}, ylabel={Loss}, ymin=0, ymax=1.5,
+      label style={font=\small}, grid=major, grid style={gray!20}, legend cell align=left,
+      legend style={draw=none, font=\footnotesize}, tick label style={font=\footnotesize}]
+    \addplot[name path=up, draw=none, forget plot] table[x=e, y expr=\thisrow{val}+\thisrow{sd}] {\curves};
+    \addplot[name path=lo, draw=none, forget plot] table[x=e, y expr=\thisrow{val}-\thisrow{sd}] {\curves};
+    \addplot[axblue!20, forget plot] fill between[of=up and lo];
+    \addplot[black, mark=*, mark size=1.2pt] table[x=e, y=train] {\curves};
+    \addlegendentry{Train}
+    \addplot[axblue, dashed, mark=square*, mark size=1.2pt] table[x=e, y=val] {\curves};
+    \addlegendentry{Validation ($\pm 1$ sd)}
+  \end{axis}
+\end{tikzpicture}
+\end{document}

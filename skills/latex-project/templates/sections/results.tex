@@ -1,0 +1,37 @@
+\section{Results}\label{sec:results}
+
+\subsection{Main Results}\label{sec:main-results}
+
+\begin{table*}[t]
+  \centering
+  \caption{Main results: mean $\pm$ standard deviation over 5 seeds; best in bold. \emph{Placeholder values}: generate this table from the results files (\texttt{latex-results-sync} skill).}
+  \label{tab:main}
+  \input{tables/main-results}
+\end{table*}
+
+\guide{Lead with the claim, then the evidence, e.g.\ ``Ours is the most accurate on all three datasets (\cref{tab:main}).''}
+\filler{15}{2}
+
+\subsection{Ablation Study}\label{sec:ablation}
+\Cref{tab:ablation} removes one component at a time.
+
+\begin{table}[t]
+  \centering
+  \caption{Ablation on Dataset~1 (placeholder values). $\Delta$ is the change from the full model.}
+  \label{tab:ablation}
+  \input{tables/ablation}
+\end{table}
+
+\filler{17}{1}
+
+\subsection{Training Dynamics}\label{sec:dynamics}
+\Cref{fig:curves} shows the loss during training.
+
+\begin{figure}[t]
+  \centering
+  \input{figures/training-curves}
+  \caption{Training and validation loss (placeholder data). The band is $\pm 1$ standard deviation over seeds.}
+  \label{fig:curves}
+\end{figure}
+
+\filler{18}{1}

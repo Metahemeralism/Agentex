@@ -18,6 +18,12 @@ __pycache__/
 *.blg
 *.fdb_latexmk
 *.fls
+*.idx
+*.ilg
+*.ind
+*.lof
+*.lot
+*.xdv
 *.log
 *.nav
 *.out
@@ -33,3 +39,6 @@ build/
 .agentex/
 arxiv_submission/
 arxiv_submission.tar.gz
+
+# The compile-loop hook builds template files in place when they are edited
+skills/*/templates/*.pdf
