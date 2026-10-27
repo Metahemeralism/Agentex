@@ -1,0 +1,48 @@
+{
+ "id": "ieee-conference",
+ "name": "IEEE conference (generic, IEEE Xplore / PDF eXpress)",
+ "checked": "2026-10-26",
+ "sources": [
+  "https://conferences.ieeeauthorcenter.ieee.org/write-your-paper/meet-ieee-xplore-requirements/",
+  "https://journals.ieeeauthorcenter.ieee.org/become-an-ieee-journal-author/publishing-ethics/guidelines-and-policies/submission-and-peer-review-policies/"
+ ],
+ "verified": true,
+ "double_blind": false,
+ "pages": {
+  "submission": null,
+  "camera-ready": null,
+  "uncounted": []
+ },
+ "style": {
+  "file": "IEEEtran.cls",
+  "sha256": null,
+  "url": "https://www.ieee.org/conferences/publishing/templates.html",
+  "why": "IEEE conference template"
+ },
+ "switch": {
+  "submission": "\\documentclass[conference]{IEEEtran}",
+  "camera-ready": "\\documentclass[conference]{IEEEtran}"
+ },
+ "pdf_version": [
+  "1.4",
+  "1.7"
+ ],
+ "no_links": true,
+ "required": [],
+ "llm_disclosure": {
+  "required": true,
+  "modes": [
+   "submission",
+   "camera-ready"
+  ],
+  "where": "the Acknowledgment section (name the AI system and the sections)",
+  "why": "IEEE policy: AI-generated content \"shall be disclosed in the acknowledgments section\"; editing/grammar only is recommended, not required"
+ },
+ "notes": [
+  "Xplore: all fonts embedded or subset; PDF 1.4-1.7; no password; no bookmarks or links; no attachments",
+  "Page limits and double-blind review vary by conference: copy this file and set pages/double_blind"
+ ],
+ "unverified": [
+  "Type 3 fonts: IEEE says they are generally not searchable; many calls forbid them (reported as WARN)"
+ ]
+}

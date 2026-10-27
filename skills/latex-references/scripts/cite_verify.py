@@ -14,9 +14,12 @@ title, authors and year, and classifies each entry:
   mismatch      the work exists but title/authors/year in your entry are wrong
   bad-doi       the DOI/arXiv id does not resolve, or resolves to a different work
   not-found     no match anywhere: likely fabricated, check by hand
+  retracted     the work was retracted, withdrawn or removed (Crossref + Retraction Watch)
   unverifiable  book/thesis/software/web entry not indexed: check by hand
-Results are cached in <project>/.agentex/cite-cache.json. Exit code 1 if anything is not verified
-(mismatch, bad-doi, not-found) or if two keys cite the same work. Stdlib only.
+Corrections, errata and expressions of concern are printed as NOTICE lines (warnings, not failures).
+Results are cached in <project>/.agentex/cite-cache.json; full runs (no --keys) also write
+.agentex/status/citations.json. Exit code 1 if anything is not verified (mismatch, bad-doi,
+not-found, missing, retracted) or if two keys cite the same work. Stdlib only.
 """
 import argparse
 import hashlib
@@ -30,12 +33,12 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
-from datetime import date
+from datetime import date, datetime, timezone
 from difflib import SequenceMatcher
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from check_refs import CITE_RE, strip_comments  # noqa: E402  (same folder)
+from check_refs import CITE_RE, scan, strip_comments  # noqa: E402  (same folder)
 
 MAILTO = os.environ.get('AGENTEX_MAILTO', '')
 UA = 'AgenTeX-cite-verify/0.3 (https://github.com/Metahemeralism/AgenTeX' + (f'; mailto:{MAILTO})' if MAILTO else ')')
@@ -45,6 +48,11 @@ ARXIV_NEW = re.compile(r'(?<![\d.])(\d{4}\.\d{4,5})(?:v\d+)?')
 ARXIV_OLD = re.compile(r'\b([a-z-]+(?:\.[A-Z]{2})?/\d{7})(?:v\d+)?')
 MONTHS = {m: m for m in 'jan feb mar apr may jun jul aug sep oct nov dec'.split()}
 BIBFILE_RE = re.compile(r'\\(?:addbibresource|bibliography)\s*(?:\[[^\]]*\])?\s*\{([^}]*)\}')
+SKIP_DIRS = {'.git', '.agentex', 'arxiv_submission'}
+# Crossref update types (live check 2026-10-26): Retraction Watch notices use retraction, correction and
+# expression_of_concern; publishers also deposit withdrawal, removal, partial_retraction, erratum, corrigendum.
+RETRACTING = {'retraction', 'withdrawal', 'removal'}
+FLAGGING = {'partial_retraction', 'expression_of_concern', 'correction', 'corrigendum', 'erratum'}
 
 
 # ---------------------------------------------------------------- BibTeX parsing
@@ -225,9 +233,32 @@ def http(url, accept='application/json', tries=3, timeout=25, headers=None):
     return None
 
 
-def rec(title, authors, year, venue='', doi='', arxiv='', source='', url='', dblp_key='', bibtex=''):
+def rec(title, authors, year, venue='', doi='', arxiv='', source='', url='', dblp_key='', bibtex='', updates=None):
+    """updates: Crossref post-publication notices (parse_updates); None = not looked up yet."""
     return {'title': title or '', 'authors': [a for a in authors if a], 'year': str(year or ''), 'venue': venue or '',
-            'doi': doi or '', 'arxiv': arxiv or '', 'source': source, 'url': url, 'dblp_key': dblp_key, 'bibtex': bibtex}
+            'doi': doi or '', 'arxiv': arxiv or '', 'source': source, 'url': url, 'dblp_key': dblp_key, 'bibtex': bibtex,
+            'updates': updates}
+
+
+def parse_updates(m):
+    """Retractions and corrections of a Crossref work -> [{type, date, doi, source}].
+
+    Verified live 2026-10-26 on Wakefield 1998 (10.1016/S0140-6736(97)11096-0) and its notice
+    (10.1016/s0140-6736(10)60175-4): the RETRACTED work's own record lists the notices in `updated-by`
+    ({DOI of the notice, type, label, source: publisher|retraction-watch, updated.date-time, record-id});
+    the notice's record carries the mirror `update-to`; `relation` is empty on both. So the work lookup
+    we already make is enough (no second request), and `select=updated-by` works on searches too.
+    filter=update-type:retraction lists notices, not retracted works. The same notice often appears
+    twice (publisher and retraction-watch): deduplicated. Reinstated works (Retraction Watch
+    "Reinstatement") showed no retraction in `updated-by` (3 of 3 sampled)."""
+    out = {}
+    for u in m.get('updated-by') or []:
+        t = u.get('type', '')
+        if t in RETRACTING | FLAGGING:
+            out.setdefault((t, u.get('DOI', '').lower()), {
+                'type': t, 'date': (u.get('updated') or {}).get('date-time', '')[:10],
+                'doi': u.get('DOI', ''), 'source': u.get('source', '')})
+    return list(out.values())
 
 
 def guarded(service):
@@ -255,7 +286,7 @@ class Lookups:
     """Network lookups; replace in tests."""
 
     def __init__(self):
-        self.down, self.arxiv_cache = set(), {}
+        self.down, self.arxiv_cache, self.arxiv_abstracts, self.works = set(), {}, {}, {}
 
     def prefetch_arxiv(self, ids):
         """One API call per 50 ids instead of one (plus a 3 s pause) per entry."""
@@ -270,21 +301,33 @@ class Lookups:
                 aid = re.sub(r'v\d+$', '', e.findtext('a:id', '', ARXIV_NS).rsplit('/abs/', 1)[-1])
                 title = ' '.join(e.findtext('a:title', '', ARXIV_NS).split())
                 if title and title != 'Error':
+                    self.arxiv_abstracts[aid] = ' '.join(e.findtext('a:summary', '', ARXIV_NS).split())
                     found[aid] = rec(title, [surname(a.findtext('a:name', '', ARXIV_NS)) for a in e.findall('a:author', ARXIV_NS)],
                                      e.findtext('a:published', '', ARXIV_NS)[:4], e.findtext('x:journal_ref', '', ARXIV_NS),
                                      e.findtext('x:doi', '', ARXIV_NS), aid, 'arxiv')
             for aid in batch:
                 self.arxiv_cache[aid] = found.get(aid)
 
+    def crossref_work(self, doi):
+        """Crossref's full record for a DOI (or None), fetched once per run."""
+        if doi.lower() not in self.works:
+            body = http('https://api.crossref.org/works/' + urllib.parse.quote(doi))
+            self.works[doi.lower()] = json.loads(body)['message'] if body else None
+        return self.works[doi.lower()]
+
     def doi(self, doi):
-        body = http('https://api.crossref.org/works/' + urllib.parse.quote(doi))
-        if not body:
+        m = self.crossref_work(doi)
+        if not m:
             return None
-        m = json.loads(body)['message']
         year = next((m[k]['date-parts'][0][0] for k in ('published-print', 'published-online', 'issued')
                      if m.get(k, {}).get('date-parts', [[None]])[0][0]), '')
         return rec((m.get('title') or [''])[0], [surname(a.get('family') or a.get('name', '')) for a in m.get('author', [])],
-                   year, (m.get('container-title') or [''])[0], m.get('DOI', doi), source='crossref')
+                   year, (m.get('container-title') or [''])[0], m.get('DOI', doi), source='crossref', updates=parse_updates(m))
+
+    def updates(self, doi):
+        """Notices for a record found elsewhere (dblp, OpenAlex, Semantic Scholar) that has a DOI."""
+        m = self.crossref_work(doi)
+        return parse_updates(m) if m else []
 
     def arxiv(self, aid):
         if aid not in self.arxiv_cache:
@@ -330,12 +373,12 @@ class Lookups:
     def crossref_search(self, title, author=''):
         body = http('https://api.crossref.org/works?' + urllib.parse.urlencode(
             {'query.bibliographic': f'{title} {author}'.strip(), 'rows': 5,
-             'select': 'DOI,title,author,issued,container-title'}))
+             'select': 'DOI,title,author,issued,container-title,updated-by'}))
         out = []
         for m in json.loads(body or '{}').get('message', {}).get('items', []):
             out.append(rec((m.get('title') or [''])[0], [surname(a.get('family') or a.get('name', '')) for a in m.get('author', [])],
                            (m.get('issued', {}).get('date-parts') or [[None]])[0][0], (m.get('container-title') or [''])[0],
-                           m.get('DOI', ''), source='crossref'))
+                           m.get('DOI', ''), source='crossref', updates=parse_updates(m)))
         return out
 
     @guarded('openalex')
@@ -431,7 +474,33 @@ def published_version(r, L):
 
 
 def verify_entry(e, L):
-    """-> {'status', 'message', 'record'}"""
+    """-> {'status', 'message', 'record', 'notices'}"""
+    return with_notices(classify(e, L), L)
+
+
+def with_notices(res, L):
+    """Attach the matched work's retraction/correction notices; a retracted work becomes 'retracted'.
+    Crossref records already carry them; others cost one Crossref lookup if they have a DOI. If that
+    lookup fails, 'notices' is left out so the next run checks the entry again."""
+    r = res.get('record') or {}
+    notices, doi = r.get('updates'), clean_doi(r.get('doi', ''))
+    if notices is None and doi and not doi.lower().startswith('10.48550'):
+        try:
+            notices = L.updates(doi)
+        except Exception as ex:
+            print(f'  retraction check failed for DOI {doi}: {ex}', file=sys.stderr)
+            return res
+    res['notices'] = notices or []
+    gone = [u for u in res['notices'] if u['type'] in RETRACTING]
+    if gone:
+        u, was = gone[0], '' if res['status'] == 'verified' else f"; also {res['status']}: {res['message']}"
+        res.update(status='retracted', message=f"{u['type']} {u['date']} (notice doi:{u['doi']}): "
+                                               f"cite the notice or remove the citation{was}")
+    return res
+
+
+def classify(e, L):
+    """Existence and metadata check -> {'status', 'message', 'record'}."""
     f = e['fields']
     doi, ax = clean_doi(f.get('doi', '')), arxiv_id(f)
     if doi.lower().startswith('10.48550/'):
@@ -494,7 +563,7 @@ def project_files(path):
     path = path.resolve()
     if path.suffix == '.bib':
         return path.parent, [path], None
-    tex = [p for p in path.rglob('*.tex') if not set(p.relative_to(path).parts) & {'.git', '.agentex', 'arxiv_submission'}]
+    tex = [p for p in path.rglob('*.tex') if not set(p.relative_to(path).parts) & SKIP_DIRS]
     cited, bibs = set(), []
     for t in tex:
         text = strip_comments(t.read_text(encoding='utf-8', errors='replace'))
@@ -506,7 +575,7 @@ def project_files(path):
                 if p.exists() and p not in bibs:
                     bibs.append(p)
     if not bibs:
-        bibs = [p for p in path.rglob('*.bib') if not set(p.relative_to(path).parts) & {'.git', '.agentex', 'arxiv_submission'}]
+        bibs = [p for p in path.rglob('*.bib') if not set(p.relative_to(path).parts) & SKIP_DIRS]
     return path, bibs, cited
 
 
@@ -527,6 +596,27 @@ def agentex_dir(root):
     return d
 
 
+def write_status(root, tool, status, summary, counts, items):
+    """Dashboard contract: <project>/.agentex/status/<tool>.json, replaced atomically.
+    status ok|warn|fail; summary <= 100 chars; items <= 20 {where: 'file:line', message}."""
+    d = agentex_dir(root) / 'status'
+    d.mkdir(exist_ok=True)
+    tmp = d / f'{tool}.json.tmp'
+    tmp.write_text(json.dumps({'tool': tool, 'status': status, 'summary': summary[:100], 'counts': counts, 'items': items[:20],
+                               'updated': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')}, indent=1))
+    os.replace(tmp, d / f'{tool}.json')
+
+
+def first_cites(root):
+    """{key: 'file:line' of its first \\cite} (for keys that have no .bib entry to point at)."""
+    sites = {}
+    for t in sorted(root.rglob('*.tex')):
+        if not set(t.relative_to(root).parts) & SKIP_DIRS:
+            for k, loc in scan(CITE_RE, strip_comments(t.read_text(encoding='utf-8', errors='replace')), t.relative_to(root)):
+                sites.setdefault(k, loc)
+    return sites
+
+
 def save_cache(root, cache):
     d = agentex_dir(root)
     tmp = d / 'cite-cache.json.tmp'
@@ -537,7 +627,7 @@ def save_cache(root, cache):
 def run(path, keys=None, check_all=False, refresh=False, offline=False, L=None):
     L = L or Lookups()
     root, bibs, cited = project_files(path)
-    entries = [e for b in bibs for e in parse_bib(b.read_text(encoding='utf-8', errors='replace'))]
+    entries = [dict(e, file=os.path.relpath(b, root)) for b in bibs for e in parse_bib(b.read_text(encoding='utf-8', errors='replace'))]
     by_key = {e['key']: e for e in entries}
     if keys:
         wanted = list(keys)
@@ -548,7 +638,7 @@ def run(path, keys=None, check_all=False, refresh=False, offline=False, L=None):
     cache = load_cache(root)
     cache['bibs'] = [os.path.relpath(b, root) for b in bibs]
     if not offline and hasattr(L, 'prefetch_arxiv'):
-        todo = [by_key[k] for k in wanted if k in by_key and (refresh or fingerprint(by_key[k]) not in cache['entries'])]
+        todo = [by_key[k] for k in wanted if k in by_key and (refresh or 'notices' not in cache['entries'].get(fingerprint(by_key[k]), {}))]
         L.prefetch_arxiv([a for a in (arxiv_id(e['fields']) for e in todo) if a])
     results = {}
     for k in wanted:
@@ -558,7 +648,8 @@ def run(path, keys=None, check_all=False, refresh=False, offline=False, L=None):
             continue
         fp = fingerprint(e)
         hit = cache['entries'].get(fp)
-        if hit and not refresh and hit['status'] != 'not-found' or (hit and offline):
+        fresh = hit and 'notices' in hit  # entries cached before the retraction check get re-verified once
+        if fresh and not refresh and hit['status'] != 'not-found' or (hit and offline):
             results[k] = hit
         elif offline:
             results[k] = {'status': 'unchecked', 'message': 'offline and not in cache', 'record': None}
@@ -592,7 +683,8 @@ def write_suggestions(path, entries, results, L):
     return len(out) - 1
 
 
-ORDER = ['not-found', 'bad-doi', 'missing', 'mismatch', 'published', 'unverifiable', 'unchecked', 'verified']
+ORDER = ['retracted', 'not-found', 'bad-doi', 'missing', 'mismatch', 'published', 'unverifiable', 'unchecked', 'verified']
+FAILING = {'retracted', 'not-found', 'bad-doi', 'missing', 'mismatch'}
 
 
 def main(argv=None):
@@ -616,17 +708,34 @@ def main(argv=None):
               f' found under {args.path}')
         return 0
     counts = {s: sum(r['status'] == s for r in results.values()) for s in ORDER}
-    print(' · '.join(f'{s} {n}' for s, n in counts.items() if n) + (f' · duplicates {len(dups)}' if dups else ''))
+    notices = [(k, u) for k, r in results.items() if r['status'] != 'retracted' for u in r.get('notices') or []]
+    counts.update(duplicates=len(dups), notices=len(notices))
+    print(' · '.join(f'{s} {n}' for s, n in counts.items() if n))
+    lines = []  # (where, message) for the status file
+    by_key = {e['key']: e for e in entries}
+    sites = first_cites(root) if counts['missing'] else {}
     for k, r in sorted(results.items(), key=lambda kv: ORDER.index(kv[1]['status'])):
         if r['status'] != 'verified' or args.verbose:
             print(f"{r['status'].upper():13s} {k:28s} {r['message']}")
+        if r['status'] != 'verified':
+            e = by_key.get(k)
+            lines.append((f"{e['file']}:{e['line']}" if e else sites.get(k, k), f"{k}: {r['status']}: {r['message']}"))
+    for k, u in notices:  # corrections and expressions of concern: worth a look, not a failure
+        msg = f"{u['type'].replace('_', ' ')} {u['date']} (doi:{u['doi']})"
+        print(f"{'NOTICE':13s} {k:28s} {msg}")
+        lines.append((f"{by_key[k]['file']}:{by_key[k]['line']}", f'{k}: {msg}'))
     for a, b, ident in dups:
         print(f'DUPLICATE     {a}, {b}: same work ({ident[:60]})')
+        lines.append((f"{by_key[b]['file']}:{by_key[b]['line']}", f'{a}, {b}: same work'))
+    bad = sum(counts[s] for s in FAILING) + len(dups)
+    if not keys:  # a --keys run sees only part of the paper, so it leaves the dashboard alone
+        status = 'fail' if bad else 'warn' if len(results) > counts['verified'] or notices else 'ok'
+        write_status(root, 'citations', status, f'{len(results)} citations: ' + ', '.join(f'{n} {s}' for s, n in counts.items() if n),
+                     counts, [{'where': w, 'message': m[:200]} for w, m in lines])
     if args.suggest is not None:
         out = Path(args.suggest) if args.suggest else agentex_dir(root) / 'suggested.bib'
         n = write_suggestions(out, entries, results, Lookups())
         print(f'wrote {n} suggested correction(s) to {out}: review them; your .bib was not changed')
-    bad = counts['not-found'] + counts['bad-doi'] + counts['mismatch'] + counts['missing'] + len(dups)
     return 1 if bad else 0
 
 

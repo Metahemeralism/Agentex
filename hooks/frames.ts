@@ -8,9 +8,23 @@ const SPIN = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '�
 export type Seg = { text: string; color?: string; bold?: boolean; dim?: boolean }
 export type Row = Seg[]
 
-// Which shell commands are AgenTeX work, and what to call them while they run.
+// Which shell commands are AgenTeX work, and what to call them while they run. First match wins.
+// Generic script names (claims.py, repro.py, issues.py) count only from an AgenTeX skill's scripts folder.
 const LABELS: [RegExp, string][] = [
+  [/cite_claims\.py/, 'checking cited claims against their sources'],
   [/cite_verify\.py/, 'verifying citations'],
+  [/latex-[\w-]+\/scripts\/preflight\.py/, 'checking submission rules'],
+  [/disclosure\.py/, 'drafting the LLM-use disclosure'],
+  [/settings_audit\.py/, 'looking for undisclosed hyperparameters'],
+  [/latex-[\w-]+\/scripts\/claims\.py/, 'checking claims against the code'],
+  [/latex-[\w-]+\/scripts\/repro\.py\s+smoke\b/, 'reproducing results in a clean checkout'],
+  [/latex-[\w-]+\/scripts\/repro\.py/, 'building the reproduction table'],
+  [/figcheck\.py/, 'checking figures'],
+  [/mplstyle\.py/, 'styling plots for print'],
+  [/html_check\.py/, 'checking the arXiv HTML'],
+  [/latex-[\w-]+\/scripts\/issues\.py\s+guard\b/, 'guarding edits'],
+  [/latex-[\w-]+\/scripts\/issues\.py/, 'tracking review issues'],
+  [/rebuttal\.py/, 'drafting the rebuttal'],
   [/results\.py\s+(audit|stale)\b/, 'checking numbers against the code'],
   [/results\.py\s+make\b/, 'rebuilding stale figures'],
   [/results\.py/, 'syncing results'],
@@ -54,7 +68,7 @@ export function welcomeRows(n: number): Row[] {
   if (n < 11) return [top, bottom]
   return [
     [...top, { text: '  installed ✓', bold: true }],
-    [...bottom, { text: '  cite guard and compile loop on · try "suggest diagrams for this repo"', dim: true }],
+    [...bottom, { text: '  cite guard and compile loop on · /agentex shows paper health', dim: true }],
   ]
 }
 

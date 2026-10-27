@@ -1,0 +1,56 @@
+{
+ "id": "icml-2026",
+ "name": "ICML 2026",
+ "checked": "2026-10-26",
+ "sources": [
+  "https://icml.cc/Conferences/2026/CallForPapers",
+  "https://media.icml.cc/Conferences/ICML2026/Styles/icml2026.zip"
+ ],
+ "verified": true,
+ "double_blind": true,
+ "pages": {
+  "submission": 8,
+  "camera-ready": 9,
+  "uncounted": [
+   "Acknowledgments",
+   "Acknowledgements",
+   "Acknowledgment",
+   "Acknowledgement",
+   "Impact Statement",
+   "Impact Statements"
+  ]
+ },
+ "style": {
+  "file": "icml2026.sty",
+  "sha256": "7cdcf90f6a59c5219e7f15c88f7ed09fcaf598dad91e6cdddc4dc3cb0e397a95",
+  "url": "https://media.icml.cc/Conferences/ICML2026/Styles/icml2026.zip",
+  "why": "CFP: \"Submitted papers that do not conform to these policies will be rejected without review\""
+ },
+ "named_if": "\\\\usepackage\\s*\\[[^\\]]*\\b(?:accepted|preprint)\\b[^\\]]*\\]\\s*\\{icml2026\\}",
+ "switch": {
+  "submission": "\\usepackage{icml2026}",
+  "camera-ready": "\\usepackage[accepted]{icml2026}"
+ },
+ "no_acks_in_submission": true,
+ "required": [
+  {
+   "what": "Impact Statement",
+   "pattern": "\\\\section\\*?\\s*\\{\\s*Impact Statements?\\s*\\}",
+   "modes": [
+    "submission",
+    "camera-ready"
+   ],
+   "why": "CFP: \"Authors are required to include a statement of the potential broader impact of their work\"",
+   "fix": "\\section*{Impact Statement} after the conclusion, before the references (not counted)"
+  }
+ ],
+ "llm_disclosure": {
+  "required": false,
+  "where": "methodology, if notable",
+  "why": "CFP: disclosure is encouraged, not required; prompt injection is desk-rejected"
+ },
+ "notes": [
+  "Accepted papers also submit a lay summary with the camera-ready version"
+ ],
+ "unverified": []
+}

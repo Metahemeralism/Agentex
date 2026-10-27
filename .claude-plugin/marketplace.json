@@ -4,13 +4,13 @@
     "name": "Metahemeralism"
   },
   "metadata": {
-    "description": "AgenTeX: agent skills for LaTeX research writing, from code to arXiv."
+    "description": "AgenTeX: keep LaTeX papers honest to the code behind them, from first draft to submission."
   },
   "plugins": [
     {
       "name": "agentex",
       "source": "./",
-      "description": "Agent skills for turning research code into LaTeX papers, figures, talks, posters and arXiv submissions, plus CVs, theses, exams, document conversion and PDF finishing."
+      "description": "Skills and hooks for papers whose results live in code: a desk-rejection gate, verified citations, numbers and figures synced to the code, paper-vs-code checks, a compile loop, review and rebuttal, arXiv packaging, plus talks, posters, CVs, theses and exams."
     }
   ]
 }

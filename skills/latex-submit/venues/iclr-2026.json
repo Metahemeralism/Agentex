@@ -1,0 +1,53 @@
+{
+ "id": "iclr-2026",
+ "name": "ICLR 2026",
+ "checked": "2026-10-26",
+ "sources": [
+  "https://iclr.cc/Conferences/2026/AuthorGuide",
+  "https://github.com/ICLR/Master-Template/raw/master/iclr2026.zip"
+ ],
+ "verified": true,
+ "double_blind": true,
+ "pages": {
+  "submission": 9,
+  "camera-ready": 10,
+  "uncounted": [
+   "Acknowledgments",
+   "Acknowledgements",
+   "Acknowledgment",
+   "Acknowledgement",
+   "Ethics Statement",
+   "Reproducibility Statement",
+   "LLM Usage",
+   "The Use of Large Language Models",
+   "The Use of Large Language Models (LLMs)"
+  ]
+ },
+ "style": {
+  "file": "iclr2026_conference.sty",
+  "sha256": "a4852f68e080d6c5245057ca2039100b409e31727898aa93c03d78ddb84374a3",
+  "url": "https://github.com/ICLR/Master-Template/raw/master/iclr2026.zip",
+  "why": "author guide: use the ICLR 2026 style files"
+ },
+ "named_if": "\\\\iclrfinalcopy\\b",
+ "switch": {
+  "submission": "keep \\iclrfinalcopy commented out",
+  "camera-ready": "\\iclrfinalcopy in the preamble"
+ },
+ "no_acks_in_submission": false,
+ "required": [],
+ "llm_disclosure": {
+  "required": true,
+  "modes": [
+   "submission",
+   "camera-ready"
+  ],
+  "where": "a separate section on LLM usage (may be in the appendix; not counted in the page limit)",
+  "why": "author guide: \"Not disclosing significant LLM usage can lead to desk rejection of the paper\""
+ },
+ "notes": [
+  "Main text beyond the page limit is desk-rejected; ethics statement max 1 page",
+  "Cite your own arXiv versions in the third person"
+ ],
+ "unverified": []
+}

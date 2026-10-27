@@ -1,0 +1,66 @@
+{
+ "id": "arr-2026",
+ "name": "ACL Rolling Review (October 2026 cycle; long papers)",
+ "checked": "2026-10-26",
+ "sources": [
+  "https://aclrollingreview.org/cfp",
+  "https://aclrollingreview.org/dates",
+  "https://github.com/acl-org/acl-style-files/blob/master/formatting.md",
+  "https://github.com/acl-org/acl-style-files/blob/master/acl.sty"
+ ],
+ "verified": true,
+ "double_blind": true,
+ "pages": {
+  "submission": 8,
+  "camera-ready": 9,
+  "uncounted": [
+   "Acknowledgments",
+   "Acknowledgements",
+   "Acknowledgment",
+   "Acknowledgement",
+   "Limitations",
+   "Ethics Statement",
+   "Ethical Considerations",
+   "Ethics"
+  ]
+ },
+ "style": {
+  "file": "acl.sty",
+  "sha256": "19dfeddc2c0e448f3926a0bef048a9db3f3611b46265b760caabd7ada4f361de",
+  "url": "https://github.com/acl-org/acl-style-files",
+  "why": "CFP: authors may not modify the style files; non-conforming submissions are rejected without review"
+ },
+ "named_if": "\\\\usepackage\\s*(?:\\[(?![^\\]]*\\breview\\b)[^\\]]*\\])?\\s*\\{acl\\}",
+ "switch": {
+  "submission": "\\usepackage[review]{acl}",
+  "camera-ready": "\\usepackage[final]{acl}"
+ },
+ "no_acks_in_submission": true,
+ "required": [
+  {
+   "what": "Limitations section",
+   "pattern": "\\\\section\\*?\\s*\\{\\s*Limitations\\s*\\}",
+   "modes": [
+    "submission",
+    "camera-ready"
+   ],
+   "why": "CFP: papers without a Limitations section \"will be desk rejected\"",
+   "fix": "\\section*{Limitations} after the conclusion, before the references (not counted)"
+  }
+ ],
+ "llm_disclosure": {
+  "required": true,
+  "modes": [
+   "camera-ready"
+  ],
+  "where": "Responsible NLP Checklist (submission form); details in the Acknowledgements",
+  "why": "CFP: use of AI for writing or coding, and its scope, must be disclosed"
+ },
+ "notes": [
+  "Short papers: 4 pages (5 camera-ready): run with --page-limit 4",
+  "Responsible NLP Checklist is part of the submission form: incorrect or incomplete answers can be desk-rejected",
+  "\"Hallucitations\" (fabricated references) are a desk-rejection reason",
+  "acl.sty hash is the master branch as of 2025-08-19 (last commit touching the file)"
+ ],
+ "unverified": []
+}

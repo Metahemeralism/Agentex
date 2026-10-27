@@ -1,6 +1,6 @@
 ---
 name: latex-results-sync
-description: "Keep a paper's numbers, tables and figures in sync with the code: results JSON to \\res{} macros, an audit for hand-typed and stale numbers, generated booktabs tables, and provenance tracking that flags and rebuilds figures older than their scripts or data. Use after reruns or before submission."
+description: "Keep a paper's numbers and figures in sync with the code: \\res{} macros from results JSON, an audit for hand-typed and stale numbers, generated tables, provenance that rebuilds stale figures and a per-figure reproduction table. Use after reruns, before submission or for reproducibility checklists."
 ---
 
 # Results Sync: the paper as a build artefact of the code
@@ -46,7 +46,23 @@ python3 scripts/results.py audit paper/           # STALE / UNDEFINED / HARD-COD
 
 The audit ignores comments, labels, lengths (`0.45\linewidth`, `3.5cm`), optional arguments, tabular specs, TikZ/pgfplots coordinates, years, small integers, one-significant-digit values and generated files. It doesn't guess when more than 3 keys match a number. It reads LaTeX structure, not a regex over raw text, but it's still heuristic: review its suggestions.
 
+## Reproduction table (artifact evaluation, reproducibility checklists)
+
+One row per paper figure/table, as reviewers and artifact-evaluation committees ask for: where it is (`\label`, caption, file:line), the command, inputs with short hashes, commit, last runtime and hardware, and FRESH / STALE / MISSING / NO-SOURCE.
+
+```bash
+python3 <skill>/scripts/repro.py table --paper paper/                      # markdown table on stdout
+python3 <skill>/scripts/repro.py table --paper paper/ --write README.md    # diff of the agentex:repro block; --apply writes it
+python3 <skill>/scripts/repro.py smoke --outputs paper/figures/loss.pdf    # rerun in a clean checkout of HEAD, compare
+python3 <skill>/scripts/repro.py checklist --paper paper/                  # DRAFT evidence for compute, code, seeds, error bars, data
+```
+
+- `make` records wall-clock seconds, platform, Python, CPU count and GPUs (from `nvidia-smi`) for each output; `table` and `checklist` read them from the lock.
+- `table` follows the `\input` tree of each main document and maps every `\includegraphics`/`\input` of an output to its float. `--write` touches only the text between `<!-- agentex:repro:start -->` and `<!-- agentex:repro:end -->` (appended if absent). NO-SOURCE rows are figure/table floats no output feeds (hand-drawn TikZ is skipped): ask the author where they came from.
+- `smoke` runs the selected producers (default all) in a throwaway `git worktree` and reports REPRODUCED (same sha256, or JSON numbers within `--tolerance`, relative, default 1e-6), DIFFERS (with the differing keys) or FAILED (first error lines, or inputs missing from the commit). PDFs and PNGs usually differ only by embedded timestamps, so compare those visually. It tests HEAD, not uncommitted edits, and runs the manifest's commands, so the safety note below applies.
+- `checklist` gives file:line pointers or "not found" for each question and never answers one. Runtime covers only producers run through `make`; training jobs outside the manifest are not counted. The author writes the checklist.
+
 ## Notes
 
-- `make` runs the manifest's commands in the shell. Only run manifests the author wrote or reviewed.
+- `make` and `smoke` run the manifest's commands in the shell. Only run manifests the author wrote or reviewed.
 - Hand-off: `latex-consistency` for claims that are not numbers (method descriptions, hyperparameters in prose); `latex-tables-figures` for figure styling.

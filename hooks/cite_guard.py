@@ -3,8 +3,8 @@
 
 Blocks an edit that ADDS a \\cite key whose .bib entry has not been verified by
 skills/latex-references/scripts/cite_verify.py (verified, published, unverifiable-type or
-metadata-mismatch entries pass; not-found, bad-doi, missing and never-checked keys are blocked).
-Editing an entry after verification invalidates it. Disable with AGENTEX_CITE_GUARD=0.
+metadata-mismatch entries pass; not-found, bad-doi, missing, retracted and never-checked keys are
+blocked). Editing an entry after verification invalidates it. Disable with AGENTEX_CITE_GUARD=0.
 """
 import json
 import os
@@ -67,7 +67,12 @@ def check(data):
             problems.append(f'{k}: not verified yet' + (' (entry changed since last check)' if known else ''))
         elif known.get('status') not in PASS:
             reason = cache.get('entries', {}).get(known['fp'], {}).get('message', '')
-            problems.append(f'{k}: {known["status"]}' + (f' ({reason})' if reason else ''))
+            if known['status'] == 'retracted':
+                problems.append(f'{k}: RETRACTED ({reason}). A retracted work cannot support a claim: remove the '
+                                'citation, or if the retraction itself is your point, cite the retraction notice '
+                                '(add its own .bib entry from that DOI) and say in the text that the work was retracted')
+            else:
+                problems.append(f'{k}: {known["status"]}' + (f' ({reason})' if reason else ''))
     if not problems:
         return None
     keys = ','.join(sorted(added))

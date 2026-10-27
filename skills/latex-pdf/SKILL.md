@@ -18,6 +18,7 @@ One script, `scripts/pdftool.py` (stdlib), uses whatever is installed (qpdf, Gho
 | Watermark | `pdftool.py watermark in.pdf 'DRAFT' -o draft.pdf` |
 | Fill a form | see "Forms" below |
 | PDF/A (archival, thesis) | `python3 <skill>/../latex-debug/scripts/build.py thesis.tex --pdfa` → `thesis-pdfa.pdf` |
+| Tagged, accessible PDF (PDF/UA-2) | `python3 <skill>/../latex-debug/scripts/build.py thesis.tex --tagged en` → `thesis-tagged.pdf` (LuaLaTeX via latexmk) |
 
 `<skill>` is this skill's folder; run as `python3 <skill>/scripts/pdftool.py …`.
 
@@ -37,7 +38,13 @@ One script, `scripts/pdftool.py` (stdlib), uses whatever is installed (qpdf, Gho
 
 ## PDF/A and accessibility
 
-`build.py --pdfa` compiles with `\DocumentMetadata{pdfstandard=A-2b}` (LaTeX 2022-06 or newer, via latexmk) into a separate `<name>-pdfa.pdf`, so the normal build is untouched. University repositories often require PDF/A. Validate with veraPDF when it's available. On TeX installations older than 2022, `\usepackage[a-2b]{pdfx}` (with a `\jobname.xmpdata` file) is the alternative. Tagged, screen-reader-accessible PDFs (PDF/UA) need `\DocumentMetadata{testphase=…}` and are still experimental in LaTeX; promise them only after checking the current LaTeX release notes.
+`build.py --pdfa` compiles with `\DocumentMetadata{pdfstandard=A-2b}` (LaTeX 2022-06 or newer, via latexmk) into a separate `<name>-pdfa.pdf`, so the normal build is untouched. University repositories often require PDF/A. Validate with veraPDF when it's available. On TeX installations older than 2022, `\usepackage[a-2b]{pdfx}` (with a `\jobname.xmpdata` file) is the alternative.
+
+For a tagged, screen-reader-accessible PDF, run `build.py thesis.tex --tagged [LANG]`. It writes `thesis-tagged.pdf` with `\DocumentMetadata{lang=en, pdfstandard=ua-2, tagging=on}`, which gives PDF 2.0 and PDF/UA-2. You can't combine it with `--pdfa`, because PDF/A-2b is PDF 1.7. Per the LaTeX Tagging Project (latex3.github.io/tagging-project, checked 2026-10), it needs LaTeX 2025-11-01 or newer; the 2025-02 prototype used `testphase=latest` instead. The engine is LuaLaTeX by default, which also embeds MathML for equations. pdfLaTeX works with `--engine pdflatex`, but XeLaTeX and tectonic don't support tagging. The author still has to supply:
+- `\includegraphics[alt={…}]` for every figure (draft it as in `latex-arxiv`), or `artifact` for decoration;
+- `\tagpdfsetup{table/header-rows={1}}` for data tables.
+
+Check the result with `pdfinfo` (`Tagged: yes`) and `verapdf --flavour ua2`. Packages that aren't tagging-compatible yet are listed at latex3.github.io/tagging-project/tagging-status.
 
 ## Forms
 

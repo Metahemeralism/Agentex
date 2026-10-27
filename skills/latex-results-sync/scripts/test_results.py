@@ -1,9 +1,11 @@
 """Run: python3 -m unittest discover skills/latex-results-sync/scripts"""
 import json
+import os
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from results import audit, build, main, make, status, table
 
@@ -87,6 +89,31 @@ class SyncTest(unittest.TestCase):
         (self.root / 'fig.txt').write_text('edited by hand')
         self.assertEqual(status(self.root, outputs)[0]['fig.txt'][0], 'modified')
         self.assertEqual(main(['stale', '--manifest', str(manifest)]), 1)
+        st = json.loads((self.root / '.agentex' / 'status' / 'provenance.json').read_text())
+        self.assertEqual((st['tool'], st['status'], st['counts']), ('provenance', 'fail', {'modified': 1}))
+
+    def test_make_records_runtime_and_gpu(self):
+        fake = self.root / 'bin' / 'nvidia-smi'
+        fake.parent.mkdir()
+        fake.write_text('#!/bin/sh\necho "NVIDIA A100-SXM4-80GB, 81920 MiB"\n')
+        fake.chmod(0o755)
+        manifest = self.root / 'agentex-artifacts.json'
+        manifest.write_text(json.dumps({'outputs': {'out.txt': {'cmd': 'echo hi > out.txt', 'inputs': []}}}))
+        with mock.patch.dict(os.environ, {'PATH': f'{fake.parent}{os.pathsep}{os.environ["PATH"]}'}):
+            make(manifest)
+        rec = json.loads((self.root / '.agentex' / 'artifacts.lock.json').read_text())['out.txt']
+        self.assertGreaterEqual(rec['seconds'], 0)
+        self.assertEqual(rec['host']['gpus'], ['NVIDIA A100-SXM4-80GB, 81920 MiB'])
+        self.assertEqual(rec['host']['cpus'], os.cpu_count())
+
+    def test_audit_writes_status(self):
+        self.write_results(0.8731)
+        build([self.root / 'results'], self.reg)
+        (self.root / 'paper' / 'main.tex').write_text('We reach 87.3\\% and \\res{nope}.\n')
+        self.assertEqual(main(['audit', str(self.root / 'paper')]), 1)
+        st = json.loads((self.root / '.agentex' / 'status' / 'numbers.json').read_text())
+        self.assertEqual((st['status'], st['counts']), ('fail', {'stale': 0, 'undefined': 1, 'hard-coded': 1}))
+        self.assertEqual(st['items'][0]['where'], 'paper/main.tex:1')
 
 
 if __name__ == '__main__':

@@ -12,7 +12,8 @@ import cite_guard  # noqa: E402
 import compile_loop  # noqa: E402
 from cite_verify import fingerprint, parse_bib, save_cache  # noqa: E402  (path set by cite_guard)
 
-BIB = '@article{good, title={Good Paper}, author={A, B}, year={2020}}\n@article{bad, title={Ghost}, author={C, D}, year={2021}}\n'
+BIB = ('@article{good, title={Good Paper}, author={A, B}, year={2020}}\n@article{bad, title={Ghost}, author={C, D}, year={2021}}\n'
+       '@article{gone, title={Retracted Paper}, author={E, F}, year={2019}}\n')
 MAIN = '\\documentclass{article}\n\\begin{document}\nHello.\n\\end{document}\n'
 
 
@@ -26,9 +27,11 @@ class CiteGuardTest(unittest.TestCase):
         es = {e['key']: e for e in parse_bib(BIB)}
         fp = {k: fingerprint(e) for k, e in es.items()}
         save_cache(self.root, {'version': 1, 'bibs': ['refs.bib'],
-                               'entries': {fp['bad']: {'status': 'not-found', 'message': 'no match'}},
+                               'entries': {fp['bad']: {'status': 'not-found', 'message': 'no match'},
+                                           fp['gone']: {'status': 'retracted', 'message': 'retraction 2010-02-06'}},
                                'keys': {'good': {'fp': fp['good'], 'status': 'verified'},
-                                        'bad': {'fp': fp['bad'], 'status': 'not-found'}}})
+                                        'bad': {'fp': fp['bad'], 'status': 'not-found'},
+                                        'gone': {'fp': fp['gone'], 'status': 'retracted'}}})
 
     def tearDown(self):
         self.tmp.cleanup()
@@ -44,6 +47,10 @@ class CiteGuardTest(unittest.TestCase):
         self.assertIn('bad: not-found (no match)', self.edit('x', '\\cite{good,bad}'))
         self.assertIn('nokey: no .bib entry', self.edit('x', '\\cite{nokey}'))
         self.assertIsNone(self.edit('x', '% \\cite{bad} commented out'))
+        msg = self.edit('x', 'as shown by \\citet{gone}')
+        self.assertIn('gone: RETRACTED (retraction 2010-02-06)', msg)
+        self.assertIn('cite the retraction notice', msg)
+        self.assertIsNone(self.edit('\\cite{gone}', '\\cite{gone}, see'))  # already cited: not this edit's doing
         (self.root / 'refs.bib').write_text(BIB.replace('Good Paper', 'Better Paper'))
         self.assertIn('entry changed', self.edit('x', '\\cite{good}'))
         msg = cite_guard.check({'tool_name': 'Write', 'tool_input': {'file_path': str(self.tex),
@@ -82,6 +89,7 @@ class CompileLoopTest(unittest.TestCase):
         self.touch()
         self.log = "LaTeX Warning: Reference `fig:old' on page 1 undefined on input line 3."
         self.assertEqual(self.stop()[0], 0)  # first build sets the baseline, pre-existing problem tolerated
+        self.assertIn('built_at', compile_loop.load_state(self.root))  # dated for the health pane
 
         self.touch()
         self.log += "\nLaTeX Warning: Citation `new2024' on page 1 undefined on input line 4."

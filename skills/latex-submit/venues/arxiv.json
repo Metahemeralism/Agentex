@@ -1,0 +1,25 @@
+{
+ "id": "arxiv",
+ "name": "arXiv",
+ "checked": "2026-10-26",
+ "sources": [
+  "https://info.arxiv.org/help/submit_tex.html"
+ ],
+ "verified": true,
+ "double_blind": false,
+ "pages": {
+  "submission": null,
+  "camera-ready": null,
+  "uncounted": []
+ },
+ "required": [],
+ "llm_disclosure": {
+  "required": false,
+  "where": "",
+  "why": ""
+ },
+ "notes": [
+  "Package the source with latex-arxiv/scripts/arxiv_pack.py (arXiv builds from source; comments ship unless stripped)"
+ ],
+ "unverified": []
+}

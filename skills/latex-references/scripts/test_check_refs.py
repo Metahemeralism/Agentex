@@ -14,6 +14,7 @@ See \cref{sec:intro,fig:missing} and \eqref{eq:a}.
 \parencite[p.~3]{knuth84}, \citet{ghost2020}.
 % \cite{commented} \ref{commented}
 50\% \label{unused}
+\newcommand{\figref}[1]{Fig.~\ref{#1}\label{#1-x}}
 """
 BIB = """
 @book{knuth84, title={TeX}}

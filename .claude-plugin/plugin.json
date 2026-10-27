@@ -1,7 +1,7 @@
 {
   "name": "agentex",
-  "version": "0.5.0",
-  "description": "AgenTeX: 18 skills + 2 hooks that keep LaTeX papers honest to the code behind them: verified citations with a cite guard, results-to-macros sync with stale-number audits, a compile-and-fix loop, TikZ, equations, tables, prior-work search, overlap screening, mock peer review and arXiv packaging. Plus 24 templates beyond the paper (posters, CVs, theses, exams, letters, cheat sheets), Markdown/Word/PDF-to-LaTeX conversion, mail merge and PDF finishing (PDF/A, forms, compression).",
+  "version": "0.6.0",
+  "description": "AgenTeX: 19 skills + 3 hooks that keep LaTeX papers honest to the code behind them: a desk-rejection gate per venue (page limit, style file, anonymity, checklists, LLM-use disclosure), citations verified against five databases with retraction checks and a cite guard, results-to-macros sync with stale-number audits and a per-figure reproduction table, paper-vs-code settings and claim checks, figure checks at printed size, a compile-and-fix loop, review and rebuttal loops, and arXiv packaging with HTML checks. Plus TikZ, equations, tables, talks, posters, 22 document templates (CVs, theses, exams), conversion and PDF finishing.",
   "author": {
     "name": "Metahemeralism"
   },
@@ -10,14 +10,17 @@
   "license": "MIT",
   "keywords": [
     "latex",
+    "citations",
+    "bibtex",
+    "reproducibility",
+    "submission",
+    "peer-review",
+    "rebuttal",
+    "arxiv",
     "tikz",
     "beamer",
-    "bibtex",
-    "arxiv",
     "poster",
-    "resume",
     "pdf",
-    "peer-review",
     "research",
     "academic-writing",
     "skills"
@@ -27,7 +30,7 @@
     "animations": {
       "type": "boolean",
       "title": "Animations",
-      "description": "Show the AgenTeX band above the prompt: a one-time welcome after install and a small animation while AgenTeX checks run.",
+      "description": "Show AgenTeX's ambient UI: a one-time welcome after install, a small animation above the prompt while AgenTeX checks run, a status line while a check fails, and a toast when one starts failing. /agentex opens the paper health pane either way.",
       "default": true
     }
   }

@@ -47,7 +47,7 @@ if (( animate )); then
     if (( i < 7 )); then draw $(( i + 1 )) 0 '' ''
     else
       s="${SPIN[$(( i % ${#SPIN[@]} ))]}"
-      draw 7 $(( i >= 9 && (i / 5) % 2 == 0 )) "${BLUE}${s} installing the plugin${OFF}" "18 skills · cite guard · compile loop"
+      draw 7 $(( i >= 9 && (i / 5) % 2 == 0 )) "${BLUE}${s} installing the plugin${OFF}" "19 skills · cite guard · compile loop"
     fi
     (( i >= 12 )) && ! kill -0 "$pid" 2>/dev/null && break
     i=$(( i + 1 ))

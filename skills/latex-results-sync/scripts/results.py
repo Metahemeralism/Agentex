@@ -5,7 +5,7 @@
   results.py audit paper/                            hard-coded numbers, STALE numbers, undefined \\res keys
   results.py table results/main.csv -o paper/tables/main.tex [--bold-max acc] [--bold-min loss] [--decimals 1] [--pm]
   results.py stale [--manifest agentex-artifacts.json] [--paper paper/]   figures/tables older than their inputs
-  results.py make  [--manifest agentex-artifacts.json] [--all]            rerun stale producers, record provenance
+  results.py make  [--manifest agentex-artifacts.json] [--all]            rerun stale producers, record provenance + runtime/hardware
 
 The manifest maps each output to the command and inputs that produce it, e.g.
   {"outputs": {"paper/figures/loss.pdf": {"cmd": "python scripts/plot.py", "inputs": ["scripts/plot.py", "results/*.json"]}}}
@@ -18,10 +18,12 @@ import hashlib
 import json
 import math
 import os
+import platform
 import re
 import subprocess
 import sys
-from datetime import datetime
+import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 REG_DEF = re.compile(r'\\@namedef\{agx@res@([^}]*)\}\{([^}]*)\}')
@@ -65,6 +67,50 @@ def agentex_dir(root):
     if not (d / '.gitignore').exists():
         (d / '.gitignore').write_text('*\n')
     return d
+
+
+def project_root(path):
+    """Nearest folder at or above `path` with .git or a manifest; else path's parent (where .agentex/status goes)."""
+    p = Path(path).resolve()
+    for d in [p, *p.parents]:
+        if (d / '.git').exists() or (d / 'agentex-artifacts.json').exists():
+            return d
+    return p.parent
+
+
+def severity(states):
+    """Dashboard level for provenance states: ok/fresh pass, untracked/no-source warn, anything else fails."""
+    bad = set(states) - {'ok', 'fresh'}
+    return 'fail' if bad - {'untracked', 'no-source'} else 'warn' if bad else 'ok'
+
+
+def write_status(root, tool, level, summary, counts, items):
+    """Atomically write .agentex/status/<tool>.json for the dashboard; items are (where, message) pairs."""
+    data = {'tool': tool, 'status': level, 'summary': summary[:100], 'counts': counts,
+            'items': [{'where': w, 'message': m} for w, m in items[:20]],
+            'updated': datetime.now(timezone.utc).isoformat(timespec='seconds')}
+    try:
+        d = agentex_dir(root) / 'status'
+        d.mkdir(exist_ok=True)
+        tmp = d / f'.{tool}.{os.getpid()}.tmp'
+        tmp.write_text(json.dumps(data, indent=1))
+        os.replace(tmp, d / f'{tool}.json')
+    except OSError:
+        pass  # the dashboard is cosmetic: never fail a check because its status file can't be written
+
+
+def hardware():
+    """Where producers run, recorded in the lock so the paper can report compute (NeurIPS checklist)."""
+    hw = {'platform': platform.platform(), 'python': platform.python_version(), 'cpus': os.cpu_count()}
+    try:
+        r = subprocess.run(['nvidia-smi', '--query-gpu=name,memory.total', '--format=csv,noheader'],
+                           capture_output=True, text=True, timeout=10)
+        gpus = [g.strip() for g in r.stdout.splitlines() if g.strip()] if r.returncode == 0 else []
+    except (OSError, subprocess.SubprocessError):
+        gpus = []
+    if gpus:
+        hw['gpus'] = gpus  # e.g. "NVIDIA A100-SXM4-80GB, 81920 MiB"
+    return hw
 
 
 def tex_escape(s):
@@ -380,16 +426,18 @@ def make(manifest, everything=False):
     # Outputs used as inputs by other outputs are rebuilt first.
     feeds = {o for o in outputs for spec in outputs.values() if o in expand_inputs(base, spec.get('inputs', []))}
     todo = sorted((o for o, (s, _) in res.items() if everything or s != 'ok'), key=lambda o: o not in feeds)
-    report = []
+    report, host = [], hardware() if todo else {}
     for out in todo:
         spec = outputs[out]
+        t0 = time.monotonic()
         r = subprocess.run(spec['cmd'], shell=True, cwd=base, capture_output=True, text=True)
+        seconds = round(time.monotonic() - t0, 3)
         if r.returncode or not (base / out).exists():
             report.append((out, 'FAILED', (r.stderr or r.stdout).strip().splitlines()[-1:] or ['no output written']))
             continue
         lock[out] = {'inputs': {i: sha(base / i) for i in expand_inputs(base, spec.get('inputs', [])) if (base / i).exists()},
                      'output': sha(base / out), 'cmd': spec['cmd'], 'commit': git_commit(base),
-                     'made': datetime.now().isoformat(timespec='seconds')}
+                     'made': datetime.now().isoformat(timespec='seconds'), 'seconds': seconds, 'host': host}
         report.append((out, 'built', []))
     (agentex_dir(base) / 'artifacts.lock.json').write_text(json.dumps(lock, indent=1))
     return report
@@ -449,7 +497,13 @@ def main(argv=None):
         for kind, f, line, tok, msg in sorted(findings, key=lambda x: ('STALE', 'UNDEFINED', 'HARD-CODED').index(x[0])):
             print(f'{kind:10s} {f}:{line}  {tok}  {msg}')
         counts = {k: sum(x[0] == k for x in findings) for k in ('STALE', 'UNDEFINED', 'HARD-CODED')}
-        print(' · '.join(f'{k.lower()} {n}' for k, n in counts.items()) + (f'  (registry: {reg})' if reg else ''))
+        summary = ' · '.join(f'{k.lower()} {n}' for k, n in counts.items())
+        print(summary + (f'  (registry: {reg})' if reg else ''))
+        root = project_root(args.paper)
+        write_status(root, 'numbers', 'fail' if counts['STALE'] or counts['UNDEFINED'] else 'warn' if findings else 'ok',
+                     summary if reg else 'no registry found: run results.py build', {k.lower(): n for k, n in counts.items()},
+                     [(f'{os.path.relpath(Path(args.paper).resolve() / f, root)}:{line}', f'{kind} {tok}: {msg}')
+                      for kind, f, line, tok, msg in findings])
         return 1 if findings else 0
     if args.cmd == 'table':
         split = lambda s: {x.strip() for x in s.split(',') if x.strip()}
@@ -462,11 +516,18 @@ def main(argv=None):
     if args.cmd == 'stale':
         base, outputs = load_manifest(args.manifest)
         res, _ = status(base, outputs)
+        items = []
         for out, (st, msg) in sorted(res.items(), key=lambda kv: kv[1][0] == 'ok'):
             print(f'{st.upper():10s} {out}  {msg}')
+            items.append((out, f'{st}: {msg}'))
         if args.paper:
             for u in untracked_includes(args.paper, base, outputs):
                 print(f'NO-SOURCE  {u}  included in the paper, but no manifest entry produces it')
+                items.append((u, 'no-source: included in the paper, but no manifest entry produces it'))
+        states = [i[1].split(':')[0] for i in items]
+        counts = {s: states.count(s) for s in dict.fromkeys(states)}
+        write_status(base, 'provenance', severity(states), ' · '.join(f'{s} {n}' for s, n in counts.items()) or 'no outputs',
+                     counts, [i for i in items if not i[1].startswith('ok:')])
         return 0 if all(s == 'ok' for s, _ in res.values()) else 1
     report = make(args.manifest, args.all)
     for out, st, err in report:

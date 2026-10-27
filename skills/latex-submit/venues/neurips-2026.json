@@ -1,0 +1,60 @@
+{
+ "id": "neurips-2026",
+ "name": "NeurIPS 2026 (main track)",
+ "checked": "2026-10-26",
+ "sources": [
+  "https://neurips.cc/Conferences/2026/CallForPapers",
+  "https://neurips.cc/Conferences/2026/MainTrackHandbook",
+  "https://media.neurips.cc/Conferences/NeurIPS2026/Formatting_Instructions_For_NeurIPS_2026.zip"
+ ],
+ "verified": true,
+ "double_blind": true,
+ "pages": {
+  "submission": 9,
+  "camera-ready": 10,
+  "uncounted": [
+   "Acknowledgments",
+   "Acknowledgements",
+   "Acknowledgment",
+   "Acknowledgement",
+   "Acknowledgments and Disclosure of Funding"
+  ]
+ },
+ "style": {
+  "file": "neurips_2026.sty",
+  "sha256": "c3fc2894e83d2517ca18b66741d6c595986d97957dc08ec08bb2125a7ec4555a",
+  "url": "https://media.neurips.cc/Conferences/NeurIPS2026/Formatting_Instructions_For_NeurIPS_2026.zip",
+  "why": "template: \"Tweaking the style files may be grounds for desk rejection\""
+ },
+ "named_if": "\\\\usepackage\\s*\\[[^\\]]*\\b(?:final|preprint|nonanonymous|sglblindworkshop)\\b[^\\]]*\\]\\s*\\{neurips_2026\\}",
+ "switch": {
+  "submission": "\\usepackage{neurips_2026} (no final/preprint option: anonymized, line numbers)",
+  "camera-ready": "\\usepackage[main, final]{neurips_2026} (track option + final)"
+ },
+ "no_acks_in_submission": true,
+ "required": [
+  {
+   "what": "NeurIPS Paper Checklist",
+   "pattern": "NeurIPS Paper Checklist",
+   "modes": [
+    "submission",
+    "camera-ready"
+   ],
+   "why": "checklist.tex: \"The papers not including the checklist will be desk rejected\"",
+   "fix": "\\input{checklist} after the references/appendix; keep the heading \"NeurIPS Paper Checklist\""
+  }
+ ],
+ "llm_disclosure": {
+  "required": false,
+  "where": "experimental setup, only if an LLM is an important, original or non-standard part of the method",
+  "why": "handbook: writing, editing and basic code assistance need not be documented"
+ },
+ "notes": [
+  "PDF max 50MB; supplementary material is a separate anonymized ZIP (max 100MB)",
+  "Use the ack environment: it hides acknowledgements in the anonymized submission",
+  "Hallucinated citations violate the NeurIPS Code of Conduct (handbook)"
+ ],
+ "unverified": [
+  "Track-specific limits (e.g. Evaluations & Datasets) were not checked: use --page-limit"
+ ]
+}

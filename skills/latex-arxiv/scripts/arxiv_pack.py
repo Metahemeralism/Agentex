@@ -75,6 +75,16 @@ def uncomment(text):
     return ''.join(out)
 
 
+# alltt is left out on purpose: commands inside it are live, so its \\input lines are real
+VERBATIM_BLOCK = re.compile(r'\\begin\{(verbatim\*?|Verbatim\*?|lstlisting|minted|filecontents\*?|comment)\}.*?\\end\{\1\}'
+                            r'|\\verb\*?([^\w\s]).*?\2', re.S)
+
+
+def blank_verbatim(text):
+    """Blank verbatim blocks and \\verb (newlines kept) so file names shown as code are not followed."""
+    return VERBATIM_BLOCK.sub(lambda m: re.sub(r'[^\n]', ' ', m[0]), text)
+
+
 def strip_comments(text):
     """Remove comments for publication. Verbatim-like environments are copied untouched;
     \\begin{comment} blocks are removed; a trailing comment keeps its '%' so no space appears."""
@@ -174,7 +184,7 @@ class Packer:
 
     def scan(self, path, base=''):
         """base: directory prefix that relative names resolve against (set by \\import)."""
-        text = uncomment(path.read_text(encoding='utf-8', errors='replace'))
+        text = blank_verbatim(uncomment(path.read_text(encoding='utf-8', errors='replace')))
         origin = self.rel(path)
         for m in GRAPHICSPATH.finditer(text):
             self.graphicspath = [''] + re.findall(r'\{([^}]*)\}', m[1])
@@ -316,6 +326,7 @@ def main(argv=None):
         else:
             shutil.copy2(f, dest)
     print(f'wrote {out}/ and {write_tar(out).name}')
+    print(f'arXiv also builds an HTML version: check it with html_check.py {args.main}')
 
     if args.compile:
         ok, errs = compile_check(out, pk.main.name)

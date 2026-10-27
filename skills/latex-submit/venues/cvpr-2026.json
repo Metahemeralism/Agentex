@@ -1,0 +1,41 @@
+{
+ "id": "cvpr-2026",
+ "name": "CVPR 2026",
+ "checked": "2026-10-26",
+ "sources": [
+  "https://cvpr.thecvf.com/Conferences/2026/AuthorGuidelines",
+  "https://github.com/cvpr-org/author-kit/archive/refs/tags/CVPR2026-v1(latex).zip"
+ ],
+ "verified": true,
+ "double_blind": true,
+ "pages": {
+  "submission": 8,
+  "camera-ready": null,
+  "uncounted": []
+ },
+ "style": {
+  "file": "cvpr.sty",
+  "sha256": "2602473285d1a7df2a445ac89b76e1afa0acab78e056f0369d19770245190153",
+  "url": "https://github.com/cvpr-org/author-kit/releases/tag/CVPR2026-v1(latex)",
+  "why": "guidelines: papers that \"do not use the template\" are rejected without review"
+ },
+ "named_if": "\\\\usepackage\\s*(?:\\[(?![^\\]]*\\b(?:review|rebuttal)\\b)[^\\]]*\\])?\\s*\\{cvpr\\}",
+ "switch": {
+  "submission": "\\usepackage[review]{cvpr}",
+  "camera-ready": "\\usepackage{cvpr}"
+ },
+ "no_acks_in_submission": false,
+ "required": [],
+ "llm_disclosure": {
+  "required": false,
+  "where": "",
+  "why": "guidelines: any tools allowed; authors are responsible"
+ },
+ "notes": [
+  "Citations of non-existent material are rejected, possibly without review",
+  "Do not put identifying information (grant IDs, co-workers) in the acknowledgements"
+ ],
+ "unverified": [
+  "Camera-ready page limit is not stated on the author guidelines page"
+ ]
+}

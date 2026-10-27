@@ -1,0 +1,25 @@
+{
+ "id": "default",
+ "name": "Generic (venue-independent checks only)",
+ "checked": "2026-10-26",
+ "sources": [],
+ "verified": false,
+ "double_blind": false,
+ "pages": {
+  "submission": null,
+  "camera-ready": null,
+  "uncounted": []
+ },
+ "required": [],
+ "llm_disclosure": {
+  "required": false,
+  "where": "",
+  "why": ""
+ },
+ "notes": [
+  "No venue rules: pass --venue <id> (see --venue list) or add a venue file"
+ ],
+ "unverified": [
+  "No venue rules applied"
+ ]
+}

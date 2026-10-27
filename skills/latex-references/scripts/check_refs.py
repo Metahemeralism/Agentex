@@ -37,7 +37,7 @@ def scan(regex, text, path):
     for m in regex.finditer(text):
         line = text.count("\n", 0, m.start()) + 1
         for key in m.group(1).split(","):
-            if key.strip():
+            if key.strip() and "#" not in key:  # #1 in a macro body is a parameter, not a key
                 yield key.strip(), f"{path}:{line}"
 
 

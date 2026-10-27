@@ -94,13 +94,16 @@ class PackTest(unittest.TestCase):
             project(root)
             (root / 'main.bbl').write_text('% $ biblatex bbl format version 3.2 $\n')
             (root / 'main.tex').write_text(MAIN.replace('{plot}', '{Plot}').replace(
-                '\\input{sections/intro}', '\\input{sections/intro}\\input{../outside}\\input{nothere}'))
+                '\\input{sections/intro}', '\\input{sections/intro}\\input{../outside}\\input{nothere}'
+                '\\begin{verbatim}\\input{shown-as-code}\\end{verbatim}\\verb|\\includegraphics{alsocode}|'))
             pk = Packer(root / 'main.tex')
             pk.run()
             errs = '\n'.join(pk.errors)
             self.assertIn('bbl format 3.2', errs)
             self.assertIn('outside the project', errs)
             self.assertIn('missing file "nothere"', errs)
+            self.assertNotIn('shown-as-code', errs)  # code in verbatim is not an input
+            self.assertNotIn('alsocode', errs)
             self.assertTrue('letter case' in errs or 'missing file "Plot"' in errs)  # macOS vs Linux FS
             self.assertEqual(main([str(root / 'main.tex')]), 1)
             self.assertFalse((root / 'arxiv_submission').exists())

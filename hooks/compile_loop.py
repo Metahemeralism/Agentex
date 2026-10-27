@@ -14,6 +14,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 PLUGIN = Path(__file__).resolve().parent.parent
@@ -112,7 +113,8 @@ def run(root, init=False, stop_hook_active=False, build_fn=build):
         if has_errors or (new and rel in state.get('problems', {})):  # first build only sets the baseline
             blocking = True
             reports.append(f'== {rel}\n{report}' + (f'\nNEW since last build: {"; ".join(sorted(new))}' if new else ''))
-    state.update(stamp=max(p.stat().st_mtime for p in sources(root)), problems={**state.get('problems', {}), **problems})
+    state.update(stamp=max(p.stat().st_mtime for p in sources(root)), problems={**state.get('problems', {}), **problems},
+                 built_at=time.time())  # the UI dates the build row from this, not from the file's mtime
     if not blocking:
         state['blocks'] = 0
         save_state(root, state)
