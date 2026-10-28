@@ -112,8 +112,8 @@ const parse = (files: Record<string, any>, stamp: number | null = null) =>
 test('health: worst first, ages, stale results, missing checks, narrow rows', async () => {
   const checks = parse(MIXED)
   expect(checks.map(c => `${c.status} ${c.tool}`)).toEqual(['fail citations', 'fail review', 'warn numbers', 'ok preflight'])
-  expect(text([checkRow(checks[2]!, NOW, 90)])).toMatch(/^! numbers +3 hand-typed numbers +1h$/)
-  expect(text([checkRow(checks[3]!, NOW, 90)])).toMatch(/^✓ preflight .* 2d$/)
+  expect(text([checkRow(checks[2]!, NOW, 90)])).toMatch(/^! Numbers +3 hand-typed numbers +1h$/)
+  expect(text([checkRow(checks[3]!, NOW, 90)])).toMatch(/^✓ Submission rules .* 2d$/)
   expect(age(30_000)).toBe('now')
   expect(missing(checks)).toEqual(['build', 'cite-claims', 'provenance', 'repro', 'smoke', 'settings', 'consistency', 'figures', 'arxiv-html'])
   // all ok: no status line, nothing to toast
@@ -128,7 +128,7 @@ test('health: worst first, ages, stale results, missing checks, narrow rows', as
   expect(stale!.stale).toBe(true)
   expect(text([checkRow(stale!, NOW, 90)])).toMatch(/2h stale$/)
   // narrow: the summary goes, glyph + name + age stay; items are clipped to the width
-  expect(text([checkRow(checks[0]!, NOW, 24)])).toBe('✗ citations 3m')
+  expect(text([checkRow(checks[0]!, NOW, 24)])).toBe('✗ Citations 3m')
   expect(text(itemRows(checks[0]!, 20))).toBe('    refs.bib:12  sm…')
   // junk and partial writes are skipped, not drawn
   expect(toCheck({ status: 'toString' }, 'x', null)).toBe(null)
@@ -138,7 +138,7 @@ test('health: worst first, ages, stale results, missing checks, narrow rows', as
 
 test('health: the compile loop state is the build row; flips and toasts', async () => {
   expect(buildCheck({ stamp: 1 }, NOW)).toBe(null) // SessionStart stamp only: no build yet
-  expect(buildCheck({ stamp: 1, problems: { 'main.tex': [] }, blocks: 0 }, NOW)).toMatchObject({ status: 'ok', summary: '1 document compile' })
+  expect(buildCheck({ stamp: 1, problems: { 'main.tex': [] }, blocks: 0 }, NOW)).toMatchObject({ status: 'ok', summary: '1 document compiles' })
   const broken = buildCheck({ problems: { 'main.tex': ['undefined reference: sec:x'] }, blocks: 2 }, NOW)!
   expect(broken).toMatchObject({ status: 'fail', items: [{ where: 'main.tex', message: 'undefined reference: sec:x' }] })
   expect(buildCheck({ problems: { 'main.tex': ['undefined citation: a'] }, blocks: 0 }, NOW)!.status).toBe('warn')
@@ -148,8 +148,8 @@ test('health: the compile loop state is the build row; flips and toasts', async 
   expect(flips(undefined, after)).toEqual([]) // first scan of a session: a baseline, no toast
   expect(flips(before, after).map(c => c.tool)).toEqual(['citations'])
   expect(flips(after, after)).toEqual([])
-  expect(toastText(flips(before, after))).toBe('✗ citations now failing: 1 retracted · /agentex')
-  expect(toastText([broken, ...after])).toBe('✗ build, citations now failing · /agentex')
+  expect(toastText(flips(before, after))).toBe('✗ Citations now failing: 1 retracted · /agentex')
+  expect(toastText([broken, ...after])).toBe('✗ Build, Citations now failing · /agentex')
 })
 
 test('/agentex opens the pane: rows worst first, Enter on a row shows its file:line items', async ($, on) => {
@@ -163,11 +163,13 @@ test('/agentex opens the pane: rows worst first, Enter on a row shows its file:l
   expect(seen.opens).toBe(1)
   for (const where of ['terminal', 'desktop'] as const) {
     const ui = await $.ui.mount({ plugin: 'agentex', surface: where, ...PANE })
-    expect((await ui.find({ type: 'Text', text: /paper health/ }))).toBeDefined()
+    expect((await ui.find({ type: 'Text', text: /AgenTeX  Paper health/ }))).toBeDefined()
     expect((await ui.find({ type: 'Text', text: /2 failing · 1 to check · 2 ok · 8 not run/ }))).toBeDefined()
     const rows = (await ui.findAll({ type: 'Button' })).map(b => b.key)
     expect(rows).toEqual(['row:citations', 'row:review', 'row:numbers', 'row:build', 'row:preflight', 'check', 'health'])
-    expect(await ui.find({ type: 'Text', text: /not run yet: cite-claims · provenance/ })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: 'Needs attention (3)' })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: 'Not run yet (8)' })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: /○ Cited claims +○ Figure sources/ })).toBeDefined()
     expect(await ui.find({ type: 'Text', text: /refs\.bib:12/ })).toBeUndefined()
     await ui.press({ key: 'row:citations' })
     expect(await ui.find({ type: 'Text', text: /refs\.bib:12  smith2020 was retracted/ })).toBeDefined()
@@ -186,9 +188,10 @@ test('pane: no results yet says so, and every check is in the dimmed not-run gro
   engine(on)
   await $.command.run({ command: 'agentex' })
   const ui = await $.ui.mount({ plugin: 'agentex', surface: 'terminal', ...PANE })
-  expect(await ui.find({ type: 'Text', text: /No AgenTeX check has written a result/ })).toBeDefined()
-  const notRun = await ui.find({ type: 'Text', text: /not run yet: build · preflight · citations/ })
+  expect(await ui.find({ type: 'Text', text: /Nothing checked yet\. Press c/ })).toBeDefined()
+  const notRun = await ui.find({ type: 'Text', text: 'Not run yet (13)' })
   expect(notRun?.props.dimColor).toBe(true)
+  expect(await ui.find({ type: 'Text', text: /○ Build +○ Submission rules/ })).toBeDefined()
   expect((await ui.findAll({ type: 'Button' })).map(b => b.key)).toEqual(['check', 'health'])
   await ui.press({ key: 'check' }) // the quick action queues /agentex:check
   expect(seen.ran).toContain('agentex:check')
@@ -204,7 +207,7 @@ test('pane: a narrow pane drops summaries; NO_COLOR drops colour but keeps the g
   await $.command.run({ command: 'agentex' })
   const ui = await $.ui.mount({ plugin: 'agentex', surface: 'terminal', ...PANE, props: { ...PANE.props, bodyColumns: 26 } })
   const row = await ui.find({ key: 'row:citations' })
-  expect(row?.text).toBe('✗ citations 3m')
+  expect(row?.text).toBe('✗ Citations 3m')
   const glyph = await ui.find({ type: 'Text', text: '✗ ' })
   expect(glyph?.props.color).toBeUndefined()
 })
@@ -222,7 +225,7 @@ test('status line follows the results; a new failure toasts once, rate-limited',
   expect(seen.toasts).toEqual([])
   files['status/citations.json'] = result('citations', 'fail', '1 retracted reference', 0)
   await $.tool.call({ tool: 'Bash', command: 'python3 cite_verify.py paper/' } as any) // AgenTeX work: rescan after it
-  expect(seen.toasts).toEqual(['✗ citations now failing: 1 retracted reference · /agentex'])
+  expect(seen.toasts).toEqual(['✗ Citations now failing: 1 retracted reference · /agentex'])
   expect(seen.status.at(-1)).toBe('AgenTeX ✗ 1 failing · /agentex')
   files['status/figures.json'] = result('figures', 'fail', 'raster figure', 0)
   await clock.advance(30_000) // the periodic scan sees it, but a minute has not passed: no second toast
@@ -230,7 +233,7 @@ test('status line follows the results; a new failure toasts once, rate-limited',
   expect(seen.status.at(-1)).toBe('AgenTeX ✗ 2 failing · /agentex')
   files['status/numbers.json'] = result('numbers', 'fail', 'stale table', 0)
   await clock.advance(60_000)
-  expect(seen.toasts.at(-1)).toBe('✗ numbers now failing: stale table · /agentex')
+  expect(seen.toasts.at(-1)).toBe('✗ Numbers now failing: stale table · /agentex')
 })
 
 test('animations off: no band, status line or toasts, but /agentex still opens the pane', { options: { animations: false } }, async ($, on) => {
@@ -260,8 +263,9 @@ test('/agentex prints the health where no surface can place a pane', async ($, o
   engine(on)
   const out = await $.command.run({ command: 'agentex' })
   expect(out.text).toBe(plainText(parse(MIXED), NOW))
-  expect(out.text).toContain('✗ citations   1 retracted reference: smith2020')
-  expect(out.text).toContain('not run yet: build · cite-claims')
+  expect(out.text).toMatch(/✗ Citations +1 retracted reference: smith2020/)
+  expect(out.text).toMatch(/^AgenTeX  Paper health +2 failing · 1 to check · 1 ok · 9 not run$/m)
+  expect(out.text).toContain('Not run yet (9)\n  ○ Build')
 })
 
 test('the band animates while an AgenTeX script runs, and clears after', async ($, on) => {

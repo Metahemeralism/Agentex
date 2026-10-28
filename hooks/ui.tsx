@@ -7,9 +7,10 @@ import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
 import type { Health } from '../types'
-import { activityRows, labelFor, welcomeRows, WELCOME_FRAMES, type Row } from './frames'
+import { activityRows, BLUE, labelFor, welcomeRows, WELCOME_FRAMES, type Row } from './frames'
 import {
-  buildCheck, checkRow, flips, headerRows, itemRows, missing, newestPerTool, plainText, sortChecks, statusText, toastText, toCheck,
+  buildCheck, checkRow, flips, headerRows, itemRows, missing, newestPerTool, notRunRows, plainText, sections, sortChecks,
+  statusText, toastText, toCheck,
 } from './health'
 
 const activity = atom({ plugin: 'agentex', key: 'activity' } as const, null)
@@ -191,20 +192,38 @@ export const register: Register = (on, options) => {
     const notRun = missing(checks)
     const run = (command: string) => () => void $.command.run({ command }).catch(() => {})
     const line = (key: string, row: Row) => <Text key={key}>{segs(Text, row, noColor)}</Text>
+    // A key hint: the key in the band's blue, what it does dimmed (the key letter alone carries it under NO_COLOR)
+    const hint = (key: string, what: string) => [
+      <Text key="k" bold color={noColor ? undefined : BLUE}>{key}</Text>,
+      <Text key="w" dimColor>{` ${what}`}</Text>,
+    ]
     return (
       <Box flexDirection="column">
-        {headerRows(checks).map((row, i) => line(`h${i}`, row))}
-        {checks.length === 0 && <Text dimColor>No AgenTeX check has written a result in this project yet.</Text>}
-        {checks.flatMap(c => [
-          <Button key={`row:${c.tool}`} plain onPress={() => void update($, opened, t => (t === c.tool ? null : c.tool))}>
-            {segs(Text, checkRow(c, last!.scannedAt, cols), noColor)}
-          </Button>,
-          ...(open === c.tool ? itemRows(c, cols).map((row, i) => line(`item:${c.tool}:${i}`, row)) : []),
-        ])}
-        {notRun.length > 0 && <Text dimColor>not run yet: {notRun.join(' · ')}</Text>}
+        {headerRows(checks, cols).map((row, i) => line(`h${i}`, row))}
+        {checks.length === 0 && (
+          <Box marginTop={1}><Text dimColor>Nothing checked yet. Press c to run the cheap offline checks.</Text></Box>
+        )}
+        {sections(checks).map(sec => (
+          <Box key={`sec:${sec.title}`} flexDirection="column" marginTop={1}>
+            <Text bold dimColor={sec.title === 'Passing'}>{`${sec.title} (${sec.checks.length})`}</Text>
+            {sec.checks.flatMap(c => [
+              <Button key={`row:${c.tool}`} plain onPress={() => void update($, opened, t => (t === c.tool ? null : c.tool))}>
+                {segs(Text, checkRow(c, last!.scannedAt, cols), noColor)}
+              </Button>,
+              ...(open === c.tool ? itemRows(c, cols).map((row, i) => line(`item:${c.tool}:${i}`, row)) : []),
+            ])}
+          </Box>
+        ))}
+        {notRun.length > 0 && (
+          <Box key="notrun" flexDirection="column" marginTop={1}>
+            <Text bold dimColor>{`Not run yet (${notRun.length})`}</Text>
+            {notRunRows(notRun, cols).map((row, i) => line(`n${i}`, row))}
+          </Box>
+        )}
         <Box flexDirection="row" gap={3} marginTop={1}>
-          <Button key="check" plain hotkey="c" onPress={run('agentex:check')}>run the cheap checks</Button>
-          <Button key="health" plain hotkey="h" onPress={run('agentex:health')}>ask what to fix next</Button>
+          <Button key="check" plain hotkey="c" onPress={run('agentex:check')}>{hint('c', 'run the cheap checks')}</Button>
+          <Button key="health" plain hotkey="h" onPress={run('agentex:health')}>{hint('h', 'what to fix next')}</Button>
+          {checks.length > 0 && <Text dimColor>↵ details</Text>}
         </Box>
       </Box>
     )
